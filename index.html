@@ -1,3 +1,8 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Carpet Warpet</title>
 <style>
   @import url('https://fonts.cdnfonts.com/css/pp-editorial-new');
@@ -167,8 +172,6 @@
   canvas {
     display: block;
     cursor: crosshair;
-    max-width: 100%;
-    height: auto;
   }
   
   #overlay {
@@ -178,3 +181,233 @@
     pointer-events: none;
   }
 </style>
+</head>
+<body>
+<div id="ipadFrame">
+  <div id="screen">
+    <!-- Onboarding Page -->
+    <div id="onboarding" class="page active">
+      <h1>Carpet Warpet</h1>
+      <p style="font-size: 20px; color: #000; margin-bottom: 20px;">Choose your carpet</p>
+      <div class="carpet-grid">
+        <div style="text-align: center;">
+          <div class="carpet-option" data-carpet="top">
+            <div style="background: linear-gradient(135deg, #e0c3a5 0%, #c9a582 100%); width: 100%; height: 100%;"></div>
+          </div>
+          <div class="carpet-label">Top</div>
+        </div>
+        <div style="text-align: center;">
+          <div class="carpet-option" data-carpet="middle">
+            <div style="background: linear-gradient(135deg, #b5926a 0%, #8b6f47 100%); width: 100%; height: 100%;"></div>
+          </div>
+          <div class="carpet-label">Middle</div>
+        </div>
+        <div style="text-align: center;">
+          <div class="carpet-option" data-carpet="bottom">
+            <div style="background: linear-gradient(135deg, #6b4423 0%, #4a2f1a 100%); width: 100%; height: 100%;"></div>
+          </div>
+          <div class="carpet-label">Bottom</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Carpet Page -->
+    <div id="carpetPage" class="page">
+      <div class="controls">
+        <button id="backBtn" class="btn btn-secondary">← Back</button>
+        <span class="instructions">Draw to fade • Switch mode to restore</span>
+        <div style="display: flex; gap: 10px;">
+          <button id="modeBtn" class="btn">Fade Mode</button>
+          <button id="resetBtn" class="btn btn-secondary">Reset</button>
+        </div>
+      </div>
+      <div id="container">
+        <canvas id="baseCanvas"></canvas>
+        <canvas id="overlay"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const container = document.getElementById('container');
+  const baseCanvas = document.getElementById('baseCanvas');
+  const overlay = document.getElementById('overlay');
+  const baseCtx = baseCanvas.getContext('2d');
+  const overlayCtx = overlay.getContext('2d');
+  const onboardingPage = document.getElementById('onboarding');
+  const carpetPage = document.getElementById('carpetPage');
+  
+  let currentCarpet = null;
+  let topImage = new Image();
+  let isDrawing = false;
+  let fadeMode = true;
+  
+  // Carpet selection
+  document.querySelectorAll('.carpet-option').forEach(option => {
+    option.addEventListener('click', () => {
+      const carpetType = option.dataset.carpet;
+      loadCarpet(carpetType);
+    });
+  });
+  
+  function loadCarpet(carpetType) {
+    currentCarpet = carpetType;
+    topImage = new Image();
+    topImage.crossOrigin = "anonymous";
+    topImage.src = `${carpetType}.png`;
+    
+    topImage.onload = () => {
+      init();
+      onboardingPage.classList.remove('active');
+      carpetPage.classList.add('active');
+    };
+    
+    topImage.onerror = () => {
+      console.error(`Failed to load ${carpetType}.png`);
+      // Create fallback with bigger canvas
+      baseCanvas.width = 700;
+      baseCanvas.height = 900;
+      overlay.width = 700;
+      overlay.height = 900;
+      
+      // Create a sample carpet pattern
+      baseCtx.fillStyle = carpetType === 'top' ? '#c9a582' : carpetType === 'middle' ? '#8b6f47' : '#4a2f1a';
+      baseCtx.fillRect(0, 0, baseCanvas.width, baseCanvas.height);
+      
+      // Add pattern
+      baseCtx.strokeStyle = 'rgba(255,255,255,0.1)';
+      baseCtx.lineWidth = 2;
+      for (let i = 0; i < baseCanvas.width; i += 30) {
+        for (let j = 0; j < baseCanvas.height; j += 30) {
+          baseCtx.strokeRect(i, j, 30, 30);
+        }
+      }
+      
+      baseCtx.fillStyle = 'white';
+      baseCtx.font = '20px PP Editorial New';
+      baseCtx.textAlign = 'center';
+      baseCtx.fillText(`Draw on me! (${carpetType}.png not found)`, baseCanvas.width/2, 50);
+      
+      onboardingPage.classList.remove('active');
+      carpetPage.classList.add('active');
+    };
+  }
+
+  function init() {
+    const maxWidth = 700;
+    const maxHeight = 900;
+    
+    let scale = Math.min(maxWidth / topImage.width, maxHeight / topImage.height);
+    
+    baseCanvas.width = topImage.width * scale;
+    baseCanvas.height = topImage.height * scale;
+    overlay.width = baseCanvas.width;
+    overlay.height = baseCanvas.height;
+    
+    baseCtx.drawImage(topImage, 0, 0, baseCanvas.width, baseCanvas.height);
+    overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
+  }
+
+  function getCanvasCoords(e) {
+    const rect = baseCanvas.getBoundingClientRect();
+    if (e.touches) {
+      return {
+        x: e.touches[0].clientX - rect.left,
+        y: e.touches[0].clientY - rect.top
+      };
+    }
+    return {
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top
+    };
+  }
+
+  function drawBrush(x, y) {
+    const radius = 30;
+    
+    if (fadeMode) {
+      // Create a temporary canvas for the brush
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = radius * 3;
+      tempCanvas.height = radius * 3;
+      const tempCtx = tempCanvas.getContext('2d');
+      
+      // Draw source image onto temp canvas
+      const scale = baseCanvas.width / topImage.width;
+      const srcX = x / scale;
+      const srcY = y / scale;
+      const srcSize = (radius * 3) / scale;
+      
+      tempCtx.drawImage(topImage, 
+        srcX - srcSize/2, srcY - srcSize/2, srcSize, srcSize,
+        0, 0, radius * 3, radius * 3
+      );
+      
+      // Apply brightness filter
+      overlayCtx.save();
+      overlayCtx.filter = 'brightness(1.8) contrast(0.5)';
+      overlayCtx.globalAlpha = 0.5;
+      overlayCtx.drawImage(tempCanvas, x - radius * 1.5, y - radius * 1.5);
+      overlayCtx.restore();
+      
+    } else {
+      // Restore mode - erase the overlay
+      overlayCtx.save();
+      overlayCtx.globalCompositeOperation = 'destination-out';
+      overlayCtx.globalAlpha = 0.5;
+      overlayCtx.beginPath();
+      overlayCtx.arc(x, y, radius, 0, Math.PI * 2);
+      overlayCtx.fill();
+      overlayCtx.restore();
+    }
+  }
+
+  function startDrawing(e) {
+    e.preventDefault();
+    isDrawing = true;
+    const coords = getCanvasCoords(e);
+    drawBrush(coords.x, coords.y);
+  }
+
+  function draw(e) {
+    e.preventDefault();
+    if (!isDrawing) return;
+    const coords = getCanvasCoords(e);
+    drawBrush(coords.x, coords.y);
+  }
+
+  function stopDrawing(e) {
+    e.preventDefault();
+    isDrawing = false;
+  }
+
+  // Mouse events
+  baseCanvas.addEventListener('mousedown', startDrawing);
+  baseCanvas.addEventListener('mousemove', draw);
+  baseCanvas.addEventListener('mouseup', stopDrawing);
+  baseCanvas.addEventListener('mouseleave', stopDrawing);
+
+  // Touch events
+  baseCanvas.addEventListener('touchstart', startDrawing);
+  baseCanvas.addEventListener('touchmove', draw);
+  baseCanvas.addEventListener('touchend', stopDrawing);
+
+  // Buttons
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
+  });
+
+  document.getElementById('modeBtn').addEventListener('click', () => {
+    fadeMode = !fadeMode;
+    document.getElementById('modeBtn').textContent = fadeMode ? 'Fade Mode' : 'Restore Mode';
+  });
+  
+  document.getElementById('backBtn').addEventListener('click', () => {
+    carpetPage.classList.remove('active');
+    onboardingPage.classList.add('active');
+    overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
+  });
+</script>
+</body>
+</html>

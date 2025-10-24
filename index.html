@@ -18,15 +18,13 @@
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    background: #5a6ba8;
+    background: #f5f5dc;
     font-family: 'Georgia', serif;
   }
   
   #ipadFrame {
-    width: 90vw;
-    max-width: 820px;
-    height: 90vh;
-    max-height: 1180px;
+    width: 820px;
+    height: 1180px;
     background: #1a1a1a;
     border-radius: 40px;
     padding: 60px 20px;
@@ -323,7 +321,7 @@
   }
 
   function drawBrush(x, y) {
-    const radius = 15;
+    const radius = 10;
     
     if (fadeMode) {
       // Create a temporary canvas for the brush
@@ -346,18 +344,18 @@
       // Apply brightness filter with grain
       overlayCtx.save();
       overlayCtx.filter = 'brightness(1.8) contrast(0.5)';
-      overlayCtx.globalAlpha = 0.4;
+      overlayCtx.globalAlpha = 0.35;
       overlayCtx.drawImage(tempCanvas, x - radius * 1.5, y - radius * 1.5);
       
-      // Add grain texture
-      for (let i = 0; i < 50; i++) {
+      // Add more pronounced grain texture
+      for (let i = 0; i < 80; i++) {
         const angle = Math.random() * Math.PI * 2;
         const dist = Math.random() * radius;
         const grainX = x + Math.cos(angle) * dist;
         const grainY = y + Math.sin(angle) * dist;
-        overlayCtx.globalAlpha = Math.random() * 0.15;
-        overlayCtx.fillStyle = 'white';
-        overlayCtx.fillRect(grainX, grainY, 1, Math.random() * 2 + 1);
+        overlayCtx.globalAlpha = Math.random() * 0.2;
+        overlayCtx.fillStyle = Math.random() > 0.5 ? 'white' : 'rgba(255,255,255,0.8)';
+        overlayCtx.fillRect(grainX, grainY, 1, Math.random() * 3 + 1);
       }
       overlayCtx.restore();
       
@@ -365,7 +363,7 @@
       // Restore mode - erase the overlay with grain
       overlayCtx.save();
       overlayCtx.globalCompositeOperation = 'destination-out';
-      overlayCtx.globalAlpha = 0.4;
+      overlayCtx.globalAlpha = 0.35;
       overlayCtx.beginPath();
       overlayCtx.arc(x, y, radius, 0, Math.PI * 2);
       overlayCtx.fill();

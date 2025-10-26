@@ -271,54 +271,102 @@ opacity: 0; /* Make it invisible */
 <script>
 const baseCanvas = document.getElementById('baseCanvas');
 const baseCtx = baseCanvas.getContext('2d');
+// ... (other global variables remain the same) ...
 const onboardingPage = document.getElementById('onboarding');
 const carpetPage = document.getElementById('carpetPage');
 const screen = document.getElementById('screen');
 const instructionsSpan = document.querySelector('.instructions');
 
 let currentCarpet = null;
-let originalCarpetImage = new Image(); // Stores the currently selected carpet image
+let originalCarpetImage = new Image();
 let isDrawing = false;
-let fadeMode = true; // true means the brush will FADE (lighten/desaturate)
+let fadeMode = true;
 
 // --- Hidden Canvas for Original Image Data ---
 const hiddenCanvas = document.createElement('canvas');
 const hiddenCtx = hiddenCanvas.getContext('2d');
 
+// --- Hidden Canvas for Brush Texture Masking ---
+// We will use a dedicated context to draw the brush grain
+const maskCanvas = document.createElement('canvas');
+const maskCtx = maskCanvas.getContext('2d');
+
 // --- Helper Functions ---
 
 // Applies a fade effect (lighten and desaturate) to a pixel
-function applyFade(r, g, b, fadeAmount = 0.3) { // fadeAmount 0 to 1
-    // Convert to grayscale for desaturation
-    const gray = (r * 0.299 + g * 0.587 + b * 0.114);
+function applyFade(r, g, b, fadeAmount = 0.2) { 
+    // Calculate Luminosity (grayscale value)
+    const gray = (r * 0.299 + g * 0.587 + b * 0.114);
 
-    // Blend towards gray and white
-    const newR = r + (gray - r) * fadeAmount; // Desaturate
-    const newG = g + (gray - g) * fadeAmount;
-    const newB = b + (gray - b) * fadeAmount;
+    // Desaturation: Blend current color (r,g,b) toward gray
+    const desatR = r + (gray - r) * fadeAmount; 
+    const desatG = g + (gray - g) * fadeAmount;
+    const desatB = b + (gray - b) * fadeAmount;
 
-    // Further lighten by blending towards white
-    const lightenAmount = fadeAmount * 0.5; // Controls how much brighter it gets
-    return {
-        r: Math.min(255, newR + (255 - newR) * lightenAmount),
-        g: Math.min(255, newG + (255 - newG) * lightenAmount),
-        b: Math.min(255, newB + (255 - newB) * lightenAmount)
-    };
+    // Lightening: Blend desaturated color toward a light-gray (e.g., 220)
+    const targetLight = 220;
+    const lightenAmount = fadeAmount * 0.5; // Less aggressive lightening
+
+    return {
+        r: Math.min(255, desatR + (targetLight - desatR) * lightenAmount),
+        g: Math.min(255, desatG + (targetLight - desatG) * lightenAmount),
+        b: Math.min(255, desatB + (targetLight - desatB) * lightenAmount)
+    };
 }
 
-// --- Carpet Selection and Initialization ---
+// Function to draw the grain shape onto the maskCanvas
+function drawGrainMask(x, y, radius) {
+    // We only need to draw the texture once for the bounding box
+    // But since the texture changes every time, we draw it locally and get its data
+
+    // Re-size the mask canvas to the brush area bounding box for efficient pixel grabbing
+    maskCanvas.width = radius * 2;
+    maskCanvas.height = radius * 2;
+    maskCtx.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
+    
+    const center = radius;
+    const grainCount = 40;
+    
+    // Draw the texture particles using a black color (opaque mask)
+    maskCtx.fillStyle = `rgba(0, 0, 0, 1)`;
+    maskCtx.globalCompositeOperation = 'source-over';
+    
+    for (let i = 0; i < grainCount; i++) {
+        // Random offset within brush radius for grainy effect
+        const angle = Math.random() * Math.PI * 2;
+        const distance = Math.random() * radius * 0.9;
+        const px = center + Math.cos(angle) * distance;
+        const py = center + Math.sin(angle) * distance;
+        
+        maskCtx.beginPath();
+        maskCtx.arc(px, py, 2 + Math.random() * 1.5, 0, Math.PI * 2); // Smaller particles
+        maskCtx.fill();
+    }
+    
+    // Add a slightly softer edge/center blend for continuity
+    maskCtx.globalAlpha = 0.1;
+    maskCtx.beginPath();
+    maskCtx.arc(center, center, radius * 0.8, 0, Math.PI * 2);
+    maskCtx.fill();
+    maskCtx.globalAlpha = 1;
+
+    // The mask data will be grabbed from (0, 0) of the maskCanvas
+}
+
+// --- Image Loading (Unchanged) ---
+// (The loadCarpet and init functions remain the same as they correctly set up the canvases)
 
 document.querySelectorAll('.carpet-option').forEach(option => {
-    option.addEventListener('click', () => {
-        const carpetType = option.dataset.carpet;
-        loadCarpet(carpetType);
-    });
+    option.addEventListener('click', () => {
+        const carpetType = option.dataset.carpet;
+        loadCarpet(carpetType);
+    });
 });
 
 function loadCarpet(carpetType) {
-    fadeMode = true; // Start in Fade Mode
+    fadeMode = true;
     screen.classList.remove('dark-mode');
-    document.getElementById('modeBtn').textContent = 'Restore Mode'; // Label shows NEXT mode
+    document.getElementById('modeBtn').textContent = 'Restore Mode';
     instructionsSpan.textContent = "Draw to fade • Switch mode to restore";
 
     currentCarpet = carpetType;
@@ -335,7 +383,6 @@ function loadCarpet(carpetType) {
     originalCarpetImage.onerror = () => {
         console.error(`Failed to load ${carpetType}.png`);
         
-        // Fallback: Create a solid color canvas if image fails
         baseCanvas.width = 700;
         baseCanvas.height = 900;
         hiddenCanvas.width = baseCanvas.width;
@@ -343,7 +390,6 @@ function loadCarpet(carpetType) {
 
         const fallbackColor = carpetType === 'top' ? '#c9a582' : carpetType === 'middle' ? '#8b6f47' : '#4a2f1a';
         
-        // Draw to base canvas directly for display
         baseCtx.fillStyle = fallbackColor;
         baseCtx.fillRect(0, 0, baseCanvas.width, baseCanvas.height);
         
@@ -352,7 +398,6 @@ function loadCarpet(carpetType) {
         baseCtx.textAlign = 'center';
         baseCtx.fillText(`Draw on me! (${carpetType}.png not found)`, baseCanvas.width/2, 50);
 
-        // Also draw to hidden canvas to 'store' this fallback
         hiddenCtx.fillStyle = fallbackColor;
         hiddenCtx.fillRect(0, 0, hiddenCanvas.width, hiddenCanvas.height);
         
@@ -373,15 +418,12 @@ function init() {
     hiddenCanvas.width = baseCanvas.width;
     hiddenCanvas.height = baseCanvas.height;
 
-    // Draw original image to HIDDEN canvas to store pristine data
     hiddenCtx.drawImage(originalCarpetImage, 0, 0, hiddenCanvas.width, hiddenCanvas.height);
-    
-    // Draw original image to BASE canvas for initial display (full color)
     baseCtx.drawImage(originalCarpetImage, 0, 0, baseCanvas.width, baseCanvas.height);
 }
 
 function getCanvasCoords(e) {
-    const rect = baseCanvas.getBoundingClientRect(); // Events on baseCanvas now
+    const rect = baseCanvas.getBoundingClientRect();
     if (e.touches) {
         return {
             x: e.touches[0].clientX - rect.left,
@@ -394,12 +436,11 @@ function getCanvasCoords(e) {
     };
 }
 
-// --- Drawing Logic (Pixel Manipulation) ---
+// --- REVISED DRAW BRUSH ---
 
 function drawBrush(x, y) {
     const brushRadius = 25;
-    const brushDensity = 10; // Number of small circles to draw for texture
-    const fadeStrength = 0.2; // How much each stroke fades the color (0 to 1)
+    const fadeStrength = 0.2; 
 
     // Calculate the bounding box for pixel manipulation
     const minX = Math.max(0, x - brushRadius);
@@ -409,7 +450,7 @@ function drawBrush(x, y) {
     const width = maxX - minX;
     const height = maxY - minY;
 
-    if (width <= 0 || height <= 0) return; // Avoid invalid ImageData
+    if (width <= 0 || height <= 0) return;
 
     // Get original pixel data from the hidden canvas
     const originalImageData = hiddenCtx.getImageData(minX, minY, width, height);
@@ -419,40 +460,27 @@ function drawBrush(x, y) {
     const currentImageData = baseCtx.getImageData(minX, minY, width, height);
     const currentPixels = currentImageData.data;
 
-    // Temporary context to draw brush texture for pixel application
-    const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = width;
-    tempCanvas.height = height;
-    const tempCtx = tempCanvas.getContext('2d');
+    // 1. Draw the desired grain texture onto the temporary mask canvas
+    drawGrainMask(brushRadius, brushRadius, brushRadius); // Draw relative to the mask canvas center
+    const brushTexture = maskCtx.getImageData(0, 0, width, height).data;
 
-    // Create the brush texture (based on your reference, like a dry chalk brush)
-    tempCtx.globalAlpha = 1; // Alpha will be handled by pixel manipulation
-    tempCtx.fillStyle = 'rgba(0,0,0,1)'; // Opaque, we'll use its shape for masking
-
-    for (let i = 0; i < brushDensity; i++) {
-        const offsetX = (Math.random() - 0.5) * brushRadius * 1.5;
-        const offsetY = (Math.random() - 0.5) * brushRadius * 1.5;
-        const smallRadius = brushRadius * (0.3 + Math.random() * 0.4);
-
-        tempCtx.beginPath();
-        tempCtx.arc(x - minX + offsetX, y - minY + offsetY, smallRadius, 0, Math.PI * 2);
-        tempCtx.fill();
-    }
-    // Get the pixel data for this brush texture
-    const brushTexture = tempCtx.getImageData(0, 0, width, height).data;
-
-    // Iterate through pixels within the brush area
+    // 2. Iterate through pixels within the brush area
     for (let i = 0; i < currentPixels.length; i += 4) {
-        const r = currentPixels[i];
-        const g = currentPixels[i + 1];
-        const b = currentPixels[i + 2];
-        // const a = currentPixels[i + 3]; // Not modifying alpha
-
-        // Check the brush texture's alpha channel to see if this pixel is 'hit' by the brush
-        // The brushTexture data is opaque where drawn (alpha = 255), transparent elsewhere (alpha = 0)
-        if (brushTexture[i + 3] > 0) { // If this pixel is within the textured brush stroke
+        // The texture data is opaque where the grain is drawn (alpha = 255)
+        // We check the texture's alpha (i + 3) to see if we should modify the carpet pixel
+        
+        // Check 1: Is this pixel within the brush area? (If the texture has any data)
+        // Check 2: We must translate the current index 'i' to the corresponding texture data index.
+        // Since we created the maskCanvas with the exact size of the bounding box (width x height),
+        // we can use the same index 'i' for both `currentPixels` and `brushTexture`.
+        if (brushTexture[i + 3] > 10) { 
+            
+            const r = currentPixels[i];
+            const g = currentPixels[i + 1];
+            const b = currentPixels[i + 2];
+            
             if (fadeMode) {
-                // Fade Mode: Lighten and desaturate current pixels
+                // Fade Mode: Desaturate and lighten the current pixels
                 const faded = applyFade(r, g, b, fadeStrength);
                 currentPixels[i] = faded.r;
                 currentPixels[i + 1] = faded.g;
@@ -466,28 +494,28 @@ function drawBrush(x, y) {
         }
     }
 
-    // Put the modified pixel data back onto the base canvas
+    // 3. Put the modified pixel data back onto the base canvas
     baseCtx.putImageData(currentImageData, minX, minY);
 }
 
 
 function startDrawing(e) {
-    e.preventDefault();
-    isDrawing = true;
-    const coords = getCanvasCoords(e);
-    drawBrush(coords.x, coords.y);
+    e.preventDefault();
+    isDrawing = true;
+    const coords = getCanvasCoords(e);
+    drawBrush(coords.x, coords.y);
 }
 
 function draw(e) {
-    e.preventDefault();
-    if (!isDrawing) return;
-    const coords = getCanvasCoords(e);
-    drawBrush(coords.x, coords.y);
+    e.preventDefault();
+    if (!isDrawing) return;
+    const coords = getCanvasCoords(e);
+    drawBrush(coords.x, coords.y);
 }
 
 function stopDrawing(e) {
-    e.preventDefault();
-    isDrawing = false;
+    e.preventDefault();
+    isDrawing = false;
 }
 
 // Attach all events to the #baseCanvas (the visible drawing surface)
@@ -504,40 +532,37 @@ baseCanvas.addEventListener('touchend', stopDrawing);
 // --- Buttons ---
 
 document.getElementById('resetBtn').addEventListener('click', () => {
-    // Reset means redrawing the pristine original image from the hidden canvas
-    if (originalCarpetImage.complete && originalCarpetImage.naturalWidth !== 0) { // Ensure image is loaded
-        baseCtx.drawImage(originalCarpetImage, 0, 0, baseCanvas.width, baseCanvas.height);
-    } else {
-        // Fallback for when image fails to load, use hidden canvas fallback
-        baseCtx.drawImage(hiddenCanvas, 0, 0, baseCanvas.width, baseCanvas.height);
-    }
-    
-    if (fadeMode) {
-        instructionsSpan.textContent = "Draw to fade • Switch mode to restore";
-    } else {
-        instructionsSpan.textContent = "Draw to restore • Switch mode to fade";
-    }
+    if (originalCarpetImage.complete && originalCarpetImage.naturalWidth !== 0) {
+        baseCtx.drawImage(originalCarpetImage, 0, 0, baseCanvas.width, baseCanvas.height);
+    } else {
+        baseCtx.drawImage(hiddenCanvas, 0, 0, baseCanvas.width, baseCanvas.height);
+    }
+    
+    if (fadeMode) {
+        instructionsSpan.textContent = "Draw to fade • Switch mode to restore";
+    } else {
+        instructionsSpan.textContent = "Draw to restore • Switch mode to fade";
+    }
 });
 
 document.getElementById('modeBtn').addEventListener('click', () => {
-    fadeMode = !fadeMode;
-    document.getElementById('modeBtn').textContent = fadeMode ? 'Restore Mode' : 'Fade Mode'; 
+    fadeMode = !fadeMode;
+    document.getElementById('modeBtn').textContent = fadeMode ? 'Restore Mode' : 'Fade Mode'; 
 
-    if (fadeMode) {
-        screen.classList.remove('dark-mode');
-        instructionsSpan.textContent = "Draw to fade • Switch mode to restore";
-    } else {
-        screen.classList.add('dark-mode');
-        instructionsSpan.textContent = "Draw to restore • Switch mode to fade";
-    }
+    if (fadeMode) {
+        screen.classList.remove('dark-mode');
+        instructionsSpan.textContent = "Draw to fade • Switch mode to restore";
+    } else {
+        screen.classList.add('dark-mode');
+        instructionsSpan.textContent = "Draw to restore • Switch mode to fade";
+    }
 });
 
 document.getElementById('backBtn').addEventListener('click', () => {
-    carpetPage.classList.remove('active');
-    onboardingPage.classList.add('active');
-    // On back, clear base canvas and reset relevant states
-    baseCtx.clearRect(0, 0, baseCanvas.width, baseCanvas.height);
-    screen.classList.remove('dark-mode');
+    carpetPage.classList.remove('active');
+    onboardingPage.classList.add('active');
+    baseCtx.clearRect(0, 0, baseCanvas.width, baseCanvas.height);
+    screen.classList.remove('dark-mode');
 });
 </script>
 </body>

@@ -51,12 +51,12 @@ background: white;
 border-radius: 20px;
 overflow: hidden;
 position: relative;
-    transition: background-color 0.3s ease, color 0.3s ease;
-  }
-  
-  #screen.dark-mode {
-    background: #1a1a1a;
-    color: white;
+transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+#screen.dark-mode {
+background: #1a1a1a;
+color: white;
 }
 
 .page {
@@ -103,8 +103,7 @@ position: relative;
 }
 
 .carpet-option:hover {
-    border-color: #999;
-    border-color: #667eea;
+border-color: #667eea;
 transform: scale(1.05);
 }
 
@@ -115,49 +114,49 @@ object-fit: cover;
 display: block;
 }
 
-  .carpet-label {
-    margin-top: 10px;
-    font-size: 18px;
-    color: #000;
-  }
-  
+.carpet-label {
+margin-top: 10px;
+font-size: 18px;
+color: #000;
+}
+
 #carpetPage {
 padding: 20px;
 justify-content: flex-start;
 }
 
-  .mode-toggle-container {
-    display: flex;
-    justify-content: center;
-    width: 100%;
-    margin-bottom: 25px;
-  }
-  
-  #modeBtn {
-    padding: 16px 40px;
-    font-size: 20px;
-    font-weight: 600;
-    cursor: pointer;
-    border: none;
-    border-radius: 16px;
-    font-family: 'Georgia', serif;
-    transition: all 0.3s;
-    background: linear-gradient(135deg, #d6c9b4 0%, #b8a78b 100%);
-    color: #3a3a3a;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-    letter-spacing: 0.5px;
-  }
-  
-  #modeBtn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
-    background: linear-gradient(135deg, #c9bca7 0%, #a89a7e 100%);
-  }
-  
-  #modeBtn:active {
-    transform: translateY(0);
-  }
-  
+.mode-toggle-container {
+display: flex;
+justify-content: center;
+width: 100%;
+margin-bottom: 25px;
+}
+
+#modeBtn {
+padding: 16px 40px;
+font-size: 20px;
+font-weight: 600;
+cursor: pointer;
+border: none;
+border-radius: 16px;
+font-family: 'Georgia', serif;
+transition: all 0.3s;
+background: linear-gradient(135deg, #d6c9b4 0%, #b8a78b 100%);
+color: #3a3a3a;
+box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+letter-spacing: 0.5px;
+}
+
+#modeBtn:hover {
+transform: translateY(-2px);
+box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+background: linear-gradient(135deg, #c9bca7 0%, #a89a7e 100%);
+}
+
+#modeBtn:active {
+transform: translateY(0);
+}
+
 .controls {
 display: flex;
 gap: 15px;
@@ -175,14 +174,12 @@ border: none;
 border-radius: 12px;
 font-family: 'Georgia', serif;
 transition: all 0.2s;
-    background: #999;
-    background: #667eea;
+background: #667eea;
 color: white;
 }
 
 .btn:hover {
-    background: #888;
-    background: #5568d3;
+background: #5568d3;
 transform: translateY(-2px);
 }
 
@@ -195,24 +192,24 @@ color: #000;
 background: #e0e0e0;
 }
 
-  #screen.dark-mode .btn-secondary {
-    background: #333;
-    color: white;
-  }
-  
-  #screen.dark-mode .btn-secondary:hover {
-    background: #444;
-  }
-  
+#screen.dark-mode .btn-secondary {
+background: #333;
+color: white;
+}
+
+#screen.dark-mode .btn-secondary:hover {
+background: #444;
+}
+
 .instructions {
 font-size: 14px;
 color: #000;
 }
 
-  #screen.dark-mode .instructions {
-    color: #ccc;
-  }
-  
+#screen.dark-mode .instructions {
+color: #ccc;
+}
+
 #container {
 position: relative;
 box-shadow: 0 4px 12px rgba(0,0,0,0.1);
@@ -241,46 +238,36 @@ pointer-events: none;
 <h1>Carpet Warpet</h1>
 <p style="font-size: 20px; color: #000; margin-bottom: 20px;">Choose your carpet</p>
 <div class="carpet-grid">
-        <div class="carpet-option" data-carpet="top">
-          <img src="top.png" alt="Top Carpet" onerror="this.style.display='none'; this.parentElement.style.background='linear-gradient(135deg, #e0c3a5 0%, #c9a582 100%)';">
-        <div style="text-align: center;">
-          <div class="carpet-option" data-carpet="top">
-            <img src="top.png" alt="Top Carpet" onerror="this.style.display='none'; this.parentElement.style.background='linear-gradient(135deg, #e0c3a5 0%, #c9a582 100%)';">
-          </div>
-          <div class="carpet-label">Top</div>
+<div style="text-align: center;">
+<div class="carpet-option" data-carpet="top">
+<img src="top.png" alt="Top Carpet" onerror="this.style.display='none'; this.parentElement.style.background='linear-gradient(135deg, #e0c3a5 0%, #c9a582 100%)';">
 </div>
-        <div class="carpet-option" data-carpet="middle">
-          <img src="middle.png" alt="Middle Carpet" onerror="this.style.display='none'; this.parentElement.style.background='linear-gradient(135deg, #b5926a 0%, #8b6f47 100%)';">
-        <div style="text-align: center;">
-          <div class="carpet-option" data-carpet="middle">
-            <img src="middle.png" alt="Middle Carpet" onerror="this.style.display='none'; this.parentElement.style.background='linear-gradient(135deg, #b5926a 0%, #8b6f47 100%)';">
-          </div>
-          <div class="carpet-label">Middle</div>
+<div class="carpet-label">Top</div>
 </div>
-        <div class="carpet-option" data-carpet="bottom">
-          <img src="bottom.png" alt="Bottom Carpet" onerror="this.style.display='none'; this.parentElement.style.background='linear-gradient(135deg, #6b4423 0%, #4a2f1a 100%)';">
-        <div style="text-align: center;">
-          <div class="carpet-option" data-carpet="bottom">
-            <img src="bottom.png" alt="Bottom Carpet" onerror="this.style.display='none'; this.parentElement.style.background='linear-gradient(135deg, #6b4423 0%, #4a2f1a 100%)';">
-          </div>
-          <div class="carpet-label">Bottom</div>
+<div style="text-align: center;">
+<div class="carpet-option" data-carpet="middle">
+<img src="middle.png" alt="Middle Carpet" onerror="this.style.display='none'; this.parentElement.style.background='linear-gradient(135deg, #b5926a 0%, #8b6f47 100%)';">
+</div>
+<div class="carpet-label">Middle</div>
+</div>
+<div style="text-align: center;">
+<div class="carpet-option" data-carpet="bottom">
+<img src="bottom.png" alt="Bottom Carpet" onerror="this.style.display='none'; this.parentElement.style.background='linear-gradient(135deg, #6b4423 0%, #4a2f1a 100%)';">
+</div>
+<div class="carpet-label">Bottom</div>
 </div>
 </div>
 </div>
 
 <!-- Carpet Page -->
 <div id="carpetPage" class="page">
-      <div class="mode-toggle-container">
-        <button id="modeBtn" class="btn">Fade Mode</button>
-      </div>
+<div class="mode-toggle-container">
+<button id="modeBtn" class="btn">Fade Mode</button>
+</div>
 <div class="controls">
 <button id="backBtn" class="btn btn-secondary">← Back</button>
 <span class="instructions">Draw to fade • Switch mode to restore</span>
-        <button id="resetBtn" class="btn btn-secondary">Reset</button>
-        <div style="display: flex; gap: 10px;">
-          <button id="modeBtn" class="btn">Restore Mode</button>
-          <button id="resetBtn" class="btn btn-secondary">Reset</button>
-        </div>
+<button id="resetBtn" class="btn btn-secondary">Reset</button>
 </div>
 <div id="container">
 <canvas id="baseCanvas"></canvas>
@@ -298,7 +285,7 @@ const baseCtx = baseCanvas.getContext('2d');
 const overlayCtx = overlay.getContext('2d');
 const onboardingPage = document.getElementById('onboarding');
 const carpetPage = document.getElementById('carpetPage');
-  const screen = document.getElementById('screen');
+const screen = document.getElementById('screen');
 
 let currentCarpet = null;
 let topImage = new Image();
@@ -314,11 +301,11 @@ loadCarpet(carpetType);
 });
 
 function loadCarpet(carpetType) {
-    // Reset to fade mode when loading new carpet
-    fadeMode = true;
-    screen.classList.remove('dark-mode');
-    document.getElementById('modeBtn').textContent = 'Fade Mode';
-    
+// Reset to fade mode when loading new carpet
+fadeMode = true;
+screen.classList.remove('dark-mode');
+document.getElementById('modeBtn').textContent = 'Fade Mode';
+
 currentCarpet = carpetType;
 topImage = new Image();
 topImage.crossOrigin = "anonymous";
@@ -398,114 +385,63 @@ y: e.clientY - rect.top
 }
 
 function drawBrush(x, y) {
-    const radius = 15;
-    
-    const radius = 20;
-    const softness = 0.85; // higher = softer edge transition
-    const edgeNoiseCount = 60; // number of rough specks at edges
+const radius = 20;
+const edgeRoughness = 40; // number of rough points at edge
 
 if (fadeMode) {
-      // Draw a circular area from the source image
-      // Fade mode: soft mask painting
+// Fade mode: apply faded effect with gradient and rough edges
 overlayCtx.save();
-      overlayCtx.globalCompositeOperation = "source-over";
+overlayCtx.globalCompositeOperation = "source-over";
 
-      // Create circular clipping path
-      // Draw a solid opaque center with soft edge
-      const gradient = overlayCtx.createRadialGradient(x, y, radius * softness, x, y, radius);
-      gradient.addColorStop(0, "rgba(255,255,255,1)"); // fully opaque center
-      gradient.addColorStop(0.8, "rgba(255,255,255,1)"); // stay opaque
-      gradient.addColorStop(1, "rgba(255,255,255,0)"); // fade at edge
-      overlayCtx.fillStyle = gradient;
-      overlayCtx.globalAlpha = 1;
-overlayCtx.beginPath();
-overlayCtx.arc(x, y, radius, 0, Math.PI * 2);
-      overlayCtx.clip();
-      
-      // Draw the brightened image
-      const scale = baseCanvas.width / topImage.width;
-      const srcX = (x / scale) - (radius * 2 / scale);
-      const srcY = (y / scale) - (radius * 2 / scale);
-      const srcSize = (radius * 4) / scale;
-      
-      overlayCtx.filter = 'brightness(1.8) contrast(0.5)';
-      overlayCtx.globalAlpha = 0.35;
-      overlayCtx.drawImage(topImage, 
-        srcX, srcY, srcSize, srcSize,
-        x - radius * 2, y - radius * 2, radius * 4, radius * 4
-      );
-      
-      overlayCtx.restore();
-      
-      // Add gritty grain texture ONLY at edges
-      overlayCtx.save();
-      for (let i = 0; i < 100; i++) {
-      overlayCtx.fill();
+// Main gradient fade
+const gradient = overlayCtx.createRadialGradient(x, y, 0, x, y, radius);
+gradient.addColorStop(0, "rgba(255,255,255,0.4)");
+gradient.addColorStop(0.7, "rgba(255,255,255,0.3)");
+gradient.addColorStop(1, "rgba(255,255,255,0)");
 
-      // Add gritty edge only (outside the main circle)
-      for (let i = 0; i < edgeNoiseCount; i++) {
-const angle = Math.random() * Math.PI * 2;
-        // Place grain only near the edge (between radius * 0.7 and radius * 1.1)
-        const dist = radius * 0.7 + Math.random() * (radius * 0.4);
-        const grainX = x + Math.cos(angle) * dist;
-        const grainY = y + Math.sin(angle) * dist;
-        
-        const grainSize = Math.random() < 0.3 ? 2 : 1;
-        const grainLength = Math.floor(Math.random() * 2) + 1;
-        
-        overlayCtx.globalAlpha = Math.random() * 0.35 + 0.1;
-        overlayCtx.fillStyle = Math.random() > 0.5 ? '#ffffff' : '#f0f0f0';
-        overlayCtx.fillRect(Math.floor(grainX), Math.floor(grainY), grainSize, grainLength);
-        const dist = radius * (0.85 + Math.random() * 0.25); // near and beyond the edge
-        const nx = x + Math.cos(angle) * dist;
-        const ny = y + Math.sin(angle) * dist;
-        overlayCtx.globalAlpha = 0.3 + Math.random() * 0.4;
-        overlayCtx.fillStyle = "rgba(255,255,255,1)";
-        overlayCtx.fillRect(nx, ny, 1 + Math.random() * 2, 1 + Math.random() * 2);
-}
-      overlayCtx.restore();
-
-      overlayCtx.restore();
-
-} else {
-      // Restore mode - erase the overlay with same radius
-      // Restore mode: erase the overlay with rough edge
-overlayCtx.save();
-      overlayCtx.globalCompositeOperation = 'destination-out';
-      overlayCtx.globalAlpha = 0.35;
-      overlayCtx.globalCompositeOperation = "destination-out";
-      
-      // Solid erase with soft edge
-      const gradient = overlayCtx.createRadialGradient(x, y, radius * softness, x, y, radius);
-      gradient.addColorStop(0, "rgba(0,0,0,1)"); // fully erase center
-      gradient.addColorStop(0.8, "rgba(0,0,0,1)"); // stay solid
-      gradient.addColorStop(1, "rgba(0,0,0,0)"); // fade at edge
-      overlayCtx.fillStyle = gradient;
-      overlayCtx.globalAlpha = 1;
+overlayCtx.fillStyle = gradient;
 overlayCtx.beginPath();
 overlayCtx.arc(x, y, radius, 0, Math.PI * 2);
 overlayCtx.fill();
-      overlayCtx.restore();
 
-      // Add edge grain to restore mode as well for consistency
-      overlayCtx.save();
-      overlayCtx.globalCompositeOperation = 'destination-out';
-      for (let i = 0; i < 40; i++) {
-      // Add roughness to edge only
-      for (let i = 0; i < edgeNoiseCount; i++) {
+// Add rough edges
+for (let i = 0; i < edgeRoughness; i++) {
 const angle = Math.random() * Math.PI * 2;
-        const dist = radius * 0.7 + Math.random() * (radius * 0.4);
-        const grainX = x + Math.cos(angle) * dist;
-        const grainY = y + Math.sin(angle) * dist;
-        
-        overlayCtx.globalAlpha = Math.random() * 0.15;
-        overlayCtx.fillRect(Math.floor(grainX), Math.floor(grainY), 1, 1);
-        const dist = radius * (0.85 + Math.random() * 0.25);
-        const nx = x + Math.cos(angle) * dist;
-        const ny = y + Math.sin(angle) * dist;
-        overlayCtx.globalAlpha = 0.3 + Math.random() * 0.4;
-        overlayCtx.fillStyle = "rgba(0,0,0,1)";
-        overlayCtx.fillRect(nx, ny, 1 + Math.random() * 2, 1 + Math.random() * 2);
+const dist = radius * (0.85 + Math.random() * 0.25);
+const nx = x + Math.cos(angle) * dist;
+const ny = y + Math.sin(angle) * dist;
+overlayCtx.globalAlpha = 0.2 + Math.random() * 0.3;
+overlayCtx.fillStyle = "rgba(255,255,255,1)";
+overlayCtx.fillRect(nx, ny, 1 + Math.random() * 2, 1 + Math.random() * 2);
+}
+
+overlayCtx.restore();
+
+} else {
+// Restore mode: erase with same effect and rough edges
+overlayCtx.save();
+overlayCtx.globalCompositeOperation = "destination-out";
+
+// Main gradient erase
+const gradient = overlayCtx.createRadialGradient(x, y, 0, x, y, radius);
+gradient.addColorStop(0, "rgba(0,0,0,0.4)");
+gradient.addColorStop(0.7, "rgba(0,0,0,0.3)");
+gradient.addColorStop(1, "rgba(0,0,0,0)");
+
+overlayCtx.fillStyle = gradient;
+overlayCtx.beginPath();
+overlayCtx.arc(x, y, radius, 0, Math.PI * 2);
+overlayCtx.fill();
+
+// Add rough edges
+for (let i = 0; i < edgeRoughness; i++) {
+const angle = Math.random() * Math.PI * 2;
+const dist = radius * (0.85 + Math.random() * 0.25);
+const nx = x + Math.cos(angle) * dist;
+const ny = y + Math.sin(angle) * dist;
+overlayCtx.globalAlpha = 0.2 + Math.random() * 0.3;
+overlayCtx.fillStyle = "rgba(0,0,0,1)";
+overlayCtx.fillRect(nx, ny, 1 + Math.random() * 2, 1 + Math.random() * 2);
 }
 
 overlayCtx.restore();
@@ -549,23 +485,22 @@ overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
 
 document.getElementById('modeBtn').addEventListener('click', () => {
 fadeMode = !fadeMode;
-    // Label shows CURRENT mode, not the action
-    document.getElementById('modeBtn').textContent = fadeMode ? 'Fade Mode' : 'Restore Mode';
-    
-    // Toggle dark mode
-    if (fadeMode) {
-      screen.classList.remove('dark-mode');
-    } else {
-      screen.classList.add('dark-mode');
-    }
-    document.getElementById('modeBtn').textContent = fadeMode ? 'Restore Mode' : 'Fade Mode';
+// Label shows CURRENT mode
+document.getElementById('modeBtn').textContent = fadeMode ? 'Fade Mode' : 'Restore Mode';
+
+// Toggle dark mode
+if (fadeMode) {
+screen.classList.remove('dark-mode');
+} else {
+screen.classList.add('dark-mode');
+}
 });
 
 document.getElementById('backBtn').addEventListener('click', () => {
 carpetPage.classList.remove('active');
 onboardingPage.classList.add('active');
 overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
-    screen.classList.remove('dark-mode');
+screen.classList.remove('dark-mode');
 });
 </script>
 </body>

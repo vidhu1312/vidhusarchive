@@ -66,7 +66,6 @@ height: 100%;
 padding: 40px;
 }
 
-/* Ensure the initial page is shown by default */
 .page.active { 
 display: flex;
 flex-direction: column;
@@ -223,11 +222,13 @@ display: block;
 cursor: crosshair;
 }
 
+/* #overlay is no longer used for drawing, can remove or make transparent */
 #overlay {
 position: absolute;
 top: 0;
 left: 0;
-/* REMOVED pointer-events: none; so we can draw on it */
+pointer-events: none; /* Keep pointer events none as it's not the drawing surface anymore */
+opacity: 0; /* Make it invisible */
 }
 </style>
 </head>
@@ -261,34 +262,48 @@ left: 0;
 </div>
 <div id="container">
 <canvas id="baseCanvas"></canvas>
-<canvas id="overlay"></canvas>
+<canvas id="overlay"></canvas> 
 </div>
 </div>
 </div>
 </div>
 
 <script>
-const container = document.getElementById('container');
 const baseCanvas = document.getElementById('baseCanvas');
-const overlay = document.getElementById('overlay');
 const baseCtx = baseCanvas.getContext('2d');
-const overlayCtx = overlay.getContext('2d');
 const onboardingPage = document.getElementById('onboarding');
 const carpetPage = document.getElementById('carpetPage');
 const screen = document.getElementById('screen');
 const instructionsSpan = document.querySelector('.instructions');
 
 let currentCarpet = null;
-let topImage = new Image();
+let originalCarpetImage = new Image(); // Stores the currently selected carpet image
 let isDrawing = false;
-let fadeMode = true; // true means the brush will FADE (apply the overlay)
+let fadeMode = true; // true means the brush will FADE (lighten/desaturate)
+
+// --- Hidden Canvas for Original Image Data ---
+const hiddenCanvas = document.createElement('canvas');
+const hiddenCtx = hiddenCanvas.getContext('2d');
 
 // --- Helper Functions ---
 
-// In this version, the overlay starts clear, so fillOverlayWithFade is no longer needed.
-// Reset now just clears the overlay.
-function clearOverlay() {
-    overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
+// Applies a fade effect (lighten and desaturate) to a pixel
+function applyFade(r, g, b, fadeAmount = 0.3) { // fadeAmount 0 to 1
+    // Convert to grayscale for desaturation
+    const gray = (r * 0.299 + g * 0.587 + b * 0.114);
+
+    // Blend towards gray and white
+    const newR = r + (gray - r) * fadeAmount; // Desaturate
+    const newG = g + (gray - g) * fadeAmount;
+    const newB = b + (gray - b) * fadeAmount;
+
+    // Further lighten by blending towards white
+    const lightenAmount = fadeAmount * 0.5; // Controls how much brighter it gets
+    return {
+        r: Math.min(255, newR + (255 - newR) * lightenAmount),
+        g: Math.min(255, newG + (255 - newG) * lightenAmount),
+        b: Math.min(255, newB + (255 - newB) * lightenAmount)
+    };
 }
 
 // --- Carpet Selection and Initialization ---
@@ -301,34 +316,35 @@ document.querySelectorAll('.carpet-option').forEach(option => {
 });
 
 function loadCarpet(carpetType) {
-    // Start in Fade Mode
-    fadeMode = true; 
+    fadeMode = true; // Start in Fade Mode
     screen.classList.remove('dark-mode');
     document.getElementById('modeBtn').textContent = 'Restore Mode'; // Label shows NEXT mode
     instructionsSpan.textContent = "Draw to fade • Switch mode to restore";
 
     currentCarpet = carpetType;
-    topImage = new Image();
-    topImage.crossOrigin = "anonymous";
-    topImage.src = `${carpetType}.png`;
+    originalCarpetImage = new Image();
+    originalCarpetImage.crossOrigin = "anonymous";
+    originalCarpetImage.src = `${carpetType}.png`;
 
-    topImage.onload = () => {
+    originalCarpetImage.onload = () => {
         init();
         onboardingPage.classList.remove('active');
         carpetPage.classList.add('active');
     };
 
-    topImage.onerror = () => {
+    originalCarpetImage.onerror = () => {
         console.error(`Failed to load ${carpetType}.png`);
         
-        // Fallback initialization
+        // Fallback: Create a solid color canvas if image fails
         baseCanvas.width = 700;
         baseCanvas.height = 900;
-        overlay.width = 700;
-        overlay.height = 900;
+        hiddenCanvas.width = baseCanvas.width;
+        hiddenCanvas.height = baseCanvas.height;
 
-        // Draw fallback base pattern
-        baseCtx.fillStyle = carpetType === 'top' ? '#c9a582' : carpetType === 'middle' ? '#8b6f47' : '#4a2f1a';
+        const fallbackColor = carpetType === 'top' ? '#c9a582' : carpetType === 'middle' ? '#8b6f47' : '#4a2f1a';
+        
+        // Draw to base canvas directly for display
+        baseCtx.fillStyle = fallbackColor;
         baseCtx.fillRect(0, 0, baseCanvas.width, baseCanvas.height);
         
         baseCtx.fillStyle = 'white';
@@ -336,8 +352,10 @@ function loadCarpet(carpetType) {
         baseCtx.textAlign = 'center';
         baseCtx.fillText(`Draw on me! (${carpetType}.png not found)`, baseCanvas.width/2, 50);
 
-        clearOverlay(); // Ensure overlay is clear (full color visible)
-
+        // Also draw to hidden canvas to 'store' this fallback
+        hiddenCtx.fillStyle = fallbackColor;
+        hiddenCtx.fillRect(0, 0, hiddenCanvas.width, hiddenCanvas.height);
+        
         onboardingPage.classList.remove('active');
         carpetPage.classList.add('active');
     };
@@ -347,25 +365,23 @@ function init() {
     const maxWidth = 700;
     const maxHeight = 900;
 
-    let scale = Math.min(maxWidth / topImage.width, maxHeight / topImage.height);
+    let scale = Math.min(maxWidth / originalCarpetImage.width, maxHeight / originalCarpetImage.height);
 
-    baseCanvas.width = topImage.width * scale;
-    baseCanvas.height = topImage.height * scale;
-    overlay.width = baseCanvas.width;
-    overlay.height = baseCanvas.height;
+    baseCanvas.width = originalCarpetImage.width * scale;
+    baseCanvas.height = originalCarpetImage.height * scale;
 
-    // Draw the original carpet image on the base canvas
-    baseCtx.drawImage(topImage, 0, 0, baseCanvas.width, baseCanvas.height);
+    hiddenCanvas.width = baseCanvas.width;
+    hiddenCanvas.height = baseCanvas.height;
+
+    // Draw original image to HIDDEN canvas to store pristine data
+    hiddenCtx.drawImage(originalCarpetImage, 0, 0, hiddenCanvas.width, hiddenCanvas.height);
     
-    // START: Overlay is CLEAR, showing full color
-    clearOverlay();
-    
-    // Ensure pointer events are active on the overlay
-    overlay.style.pointerEvents = 'auto'; 
+    // Draw original image to BASE canvas for initial display (full color)
+    baseCtx.drawImage(originalCarpetImage, 0, 0, baseCanvas.width, baseCanvas.height);
 }
 
 function getCanvasCoords(e) {
-    const rect = overlay.getBoundingClientRect();
+    const rect = baseCanvas.getBoundingClientRect(); // Events on baseCanvas now
     if (e.touches) {
         return {
             x: e.touches[0].clientX - rect.left,
@@ -378,71 +394,82 @@ function getCanvasCoords(e) {
     };
 }
 
-// --- Drawing Logic with Rough Edges ---
+// --- Drawing Logic (Pixel Manipulation) ---
 
 function drawBrush(x, y) {
-    const radius = 25;
-    const edgeRoughness = 20;
-    // Semi-transparent white for the 'faded' look
-    const fadeColor = "rgba(255, 255, 255, 0.45)"; 
+    const brushRadius = 25;
+    const brushDensity = 10; // Number of small circles to draw for texture
+    const fadeStrength = 0.2; // How much each stroke fades the color (0 to 1)
 
-    overlayCtx.save();
-    
-    if (fadeMode) {
-        // Fade Mode: Draw the white overlay (Source-over)
-        overlayCtx.globalCompositeOperation = "source-over";
-        instructionsSpan.textContent = "Draw to fade • Switch mode to restore"; 
-        
-        // 1. Create a soft gradient for the main stroke (like dust/light)
-        const gradient = overlayCtx.createRadialGradient(x, y, 0, x, y, radius);
-        gradient.addColorStop(0, fadeColor);
-        gradient.addColorStop(0.7, fadeColor);
-        gradient.addColorStop(1, "rgba(255, 255, 255, 0)"); // Fades out
-        
-        overlayCtx.fillStyle = gradient;
-        overlayCtx.beginPath();
-        overlayCtx.arc(x, y, radius, 0, Math.PI * 2); 
-        overlayCtx.fill();
+    // Calculate the bounding box for pixel manipulation
+    const minX = Math.max(0, x - brushRadius);
+    const minY = Math.max(0, y - brushRadius);
+    const maxX = Math.min(baseCanvas.width, x + brushRadius);
+    const maxY = Math.min(baseCanvas.height, y + brushRadius);
+    const width = maxX - minX;
+    const height = maxY - minY;
 
-        // 2. Add rough edges (using a solid white for contrast/texture)
-        overlayCtx.fillStyle = 'rgba(255, 255, 255, 0.6)';
-        for (let i = 0; i < edgeRoughness; i++) {
-            const angle = Math.random() * Math.PI * 2;
-            const dist = radius * (0.8 + Math.random() * 0.3); 
-            const nx = x + Math.cos(angle) * dist;
-            const ny = y + Math.sin(angle) * dist;
-            const size = 1 + Math.random() * 2;
-            overlayCtx.fillRect(nx, ny, size, size);
-        }
+    if (width <= 0 || height <= 0) return; // Avoid invalid ImageData
 
-    } else {
-        // Restore Mode: Erase the overlay (Destination-out)
-        overlayCtx.globalCompositeOperation = "destination-out";
-        instructionsSpan.textContent = "Draw to restore • Switch mode to fade"; 
-        
-        // Use a solid color for erasing, as only the opacity matters for destination-out
-        const eraseColor = "rgba(0, 0, 0, 1)"; 
+    // Get original pixel data from the hidden canvas
+    const originalImageData = hiddenCtx.getImageData(minX, minY, width, height);
+    const originalPixels = originalImageData.data;
 
-        // 1. Draw a main circular shape for effective erasing
-        overlayCtx.fillStyle = eraseColor;
-        overlayCtx.beginPath();
-        overlayCtx.arc(x, y, radius * 1.1, 0, Math.PI * 2); // Slightly larger brush for full erase
-        overlayCtx.fill();
+    // Get current pixel data from the base canvas (what's currently displayed)
+    const currentImageData = baseCtx.getImageData(minX, minY, width, height);
+    const currentPixels = currentImageData.data;
 
-        // 2. Add rough edges for a frayed look when restoring
-        overlayCtx.fillStyle = eraseColor;
-        for (let i = 0; i < edgeRoughness; i++) {
-            const angle = Math.random() * Math.PI * 2;
-            const dist = radius * (0.8 + Math.random() * 0.3); 
-            const nx = x + Math.cos(angle) * dist;
-            const ny = y + Math.sin(angle) * dist;
-            const size = 1 + Math.random() * 2;
-            overlayCtx.fillRect(nx, ny, size, size);
+    // Temporary context to draw brush texture for pixel application
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = width;
+    tempCanvas.height = height;
+    const tempCtx = tempCanvas.getContext('2d');
+
+    // Create the brush texture (based on your reference, like a dry chalk brush)
+    tempCtx.globalAlpha = 1; // Alpha will be handled by pixel manipulation
+    tempCtx.fillStyle = 'rgba(0,0,0,1)'; // Opaque, we'll use its shape for masking
+
+    for (let i = 0; i < brushDensity; i++) {
+        const offsetX = (Math.random() - 0.5) * brushRadius * 1.5;
+        const offsetY = (Math.random() - 0.5) * brushRadius * 1.5;
+        const smallRadius = brushRadius * (0.3 + Math.random() * 0.4);
+
+        tempCtx.beginPath();
+        tempCtx.arc(x - minX + offsetX, y - minY + offsetY, smallRadius, 0, Math.PI * 2);
+        tempCtx.fill();
+    }
+    // Get the pixel data for this brush texture
+    const brushTexture = tempCtx.getImageData(0, 0, width, height).data;
+
+    // Iterate through pixels within the brush area
+    for (let i = 0; i < currentPixels.length; i += 4) {
+        const r = currentPixels[i];
+        const g = currentPixels[i + 1];
+        const b = currentPixels[i + 2];
+        // const a = currentPixels[i + 3]; // Not modifying alpha
+
+        // Check the brush texture's alpha channel to see if this pixel is 'hit' by the brush
+        // The brushTexture data is opaque where drawn (alpha = 255), transparent elsewhere (alpha = 0)
+        if (brushTexture[i + 3] > 0) { // If this pixel is within the textured brush stroke
+            if (fadeMode) {
+                // Fade Mode: Lighten and desaturate current pixels
+                const faded = applyFade(r, g, b, fadeStrength);
+                currentPixels[i] = faded.r;
+                currentPixels[i + 1] = faded.g;
+                currentPixels[i + 2] = faded.b;
+            } else {
+                // Restore Mode: Copy original pixels from hidden canvas
+                currentPixels[i] = originalPixels[i];
+                currentPixels[i + 1] = originalPixels[i + 1];
+                currentPixels[i + 2] = originalPixels[i + 2];
+            }
         }
     }
-    
-    overlayCtx.restore();
+
+    // Put the modified pixel data back onto the base canvas
+    baseCtx.putImageData(currentImageData, minX, minY);
 }
+
 
 function startDrawing(e) {
     e.preventDefault();
@@ -463,22 +490,28 @@ function stopDrawing(e) {
     isDrawing = false;
 }
 
-// Attach all events to the #overlay canvas (the top layer)
-overlay.addEventListener('mousedown', startDrawing);
-overlay.addEventListener('mousemove', draw);
-overlay.addEventListener('mouseup', stopDrawing);
-overlay.addEventListener('mouseleave', stopDrawing);
+// Attach all events to the #baseCanvas (the visible drawing surface)
+baseCanvas.addEventListener('mousedown', startDrawing);
+baseCanvas.addEventListener('mousemove', draw);
+baseCanvas.addEventListener('mouseup', stopDrawing);
+baseCanvas.addEventListener('mouseleave', stopDrawing);
 
 // Touch events
-overlay.addEventListener('touchstart', startDrawing);
-overlay.addEventListener('touchmove', draw);
-overlay.addEventListener('touchend', stopDrawing);
+baseCanvas.addEventListener('touchstart', startDrawing);
+baseCanvas.addEventListener('touchmove', draw);
+baseCanvas.addEventListener('touchend', stopDrawing);
 
 // --- Buttons ---
 
 document.getElementById('resetBtn').addEventListener('click', () => {
-    // Reset clears the overlay, restoring full color
-    clearOverlay(); 
+    // Reset means redrawing the pristine original image from the hidden canvas
+    if (originalCarpetImage.complete && originalCarpetImage.naturalWidth !== 0) { // Ensure image is loaded
+        baseCtx.drawImage(originalCarpetImage, 0, 0, baseCanvas.width, baseCanvas.height);
+    } else {
+        // Fallback for when image fails to load, use hidden canvas fallback
+        baseCtx.drawImage(hiddenCanvas, 0, 0, baseCanvas.width, baseCanvas.height);
+    }
+    
     if (fadeMode) {
         instructionsSpan.textContent = "Draw to fade • Switch mode to restore";
     } else {
@@ -502,7 +535,8 @@ document.getElementById('modeBtn').addEventListener('click', () => {
 document.getElementById('backBtn').addEventListener('click', () => {
     carpetPage.classList.remove('active');
     onboardingPage.classList.add('active');
-    clearOverlay();
+    // On back, clear base canvas and reset relevant states
+    baseCtx.clearRect(0, 0, baseCanvas.width, baseCanvas.height);
     screen.classList.remove('dark-mode');
 });
 </script>

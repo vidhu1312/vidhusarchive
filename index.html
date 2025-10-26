@@ -103,7 +103,7 @@
   }
   
   .carpet-option:hover {
-    border-color: #667eea;
+    border-color: #999;
     transform: scale(1.05);
   }
   
@@ -135,15 +135,16 @@
     border-radius: 16px;
     font-family: 'Georgia', serif;
     transition: all 0.3s;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    background: linear-gradient(135deg, #d6c9b4 0%, #b8a78b 100%);
+    color: #3a3a3a;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
     letter-spacing: 0.5px;
   }
   
   #modeBtn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+    background: linear-gradient(135deg, #c9bca7 0%, #a89a7e 100%);
   }
   
   #modeBtn:active {
@@ -167,12 +168,12 @@
     border-radius: 12px;
     font-family: 'Georgia', serif;
     transition: all 0.2s;
-    background: #667eea;
+    background: #999;
     color: white;
   }
   
   .btn:hover {
-    background: #5568d3;
+    background: #888;
     transform: translateY(-2px);
   }
   
@@ -246,7 +247,7 @@
     <!-- Carpet Page -->
     <div id="carpetPage" class="page">
       <div class="mode-toggle-container">
-        <button id="modeBtn" class="btn">Restore Mode</button>
+        <button id="modeBtn" class="btn">Fade Mode</button>
       </div>
       <div class="controls">
         <button id="backBtn" class="btn btn-secondary">← Back</button>
@@ -288,7 +289,7 @@
     // Reset to fade mode when loading new carpet
     fadeMode = true;
     screen.classList.remove('dark-mode');
-    document.getElementById('modeBtn').textContent = 'Restore Mode';
+    document.getElementById('modeBtn').textContent = 'Fade Mode';
     
     currentCarpet = carpetType;
     topImage = new Image();
@@ -395,19 +396,20 @@
       
       overlayCtx.restore();
       
-      // Add gritty grain texture
+      // Add gritty grain texture ONLY at edges
       overlayCtx.save();
-      for (let i = 0; i < 120; i++) {
+      for (let i = 0; i < 100; i++) {
         const angle = Math.random() * Math.PI * 2;
-        const dist = Math.random() * radius;
+        // Place grain only near the edge (between radius * 0.7 and radius * 1.1)
+        const dist = radius * 0.7 + Math.random() * (radius * 0.4);
         const grainX = x + Math.cos(angle) * dist;
         const grainY = y + Math.sin(angle) * dist;
         
         const grainSize = Math.random() < 0.3 ? 2 : 1;
-        const grainLength = Math.floor(Math.random() * 3) + 1;
+        const grainLength = Math.floor(Math.random() * 2) + 1;
         
-        overlayCtx.globalAlpha = Math.random() * 0.4 + 0.1;
-        overlayCtx.fillStyle = Math.random() > 0.6 ? '#ffffff' : Math.random() > 0.3 ? '#f5f5f5' : '#e8e8e8';
+        overlayCtx.globalAlpha = Math.random() * 0.35 + 0.1;
+        overlayCtx.fillStyle = Math.random() > 0.5 ? '#ffffff' : '#f0f0f0';
         overlayCtx.fillRect(Math.floor(grainX), Math.floor(grainY), grainSize, grainLength);
       }
       overlayCtx.restore();
@@ -420,6 +422,20 @@
       overlayCtx.beginPath();
       overlayCtx.arc(x, y, radius, 0, Math.PI * 2);
       overlayCtx.fill();
+      overlayCtx.restore();
+      
+      // Add edge grain to restore mode as well for consistency
+      overlayCtx.save();
+      overlayCtx.globalCompositeOperation = 'destination-out';
+      for (let i = 0; i < 40; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const dist = radius * 0.7 + Math.random() * (radius * 0.4);
+        const grainX = x + Math.cos(angle) * dist;
+        const grainY = y + Math.sin(angle) * dist;
+        
+        overlayCtx.globalAlpha = Math.random() * 0.15;
+        overlayCtx.fillRect(Math.floor(grainX), Math.floor(grainY), 1, 1);
+      }
       overlayCtx.restore();
     }
   }
@@ -461,7 +477,8 @@
 
   document.getElementById('modeBtn').addEventListener('click', () => {
     fadeMode = !fadeMode;
-    document.getElementById('modeBtn').textContent = fadeMode ? 'Restore Mode' : 'Fade Mode';
+    // Label shows CURRENT mode, not the action
+    document.getElementById('modeBtn').textContent = fadeMode ? 'Fade Mode' : 'Restore Mode';
     
     // Toggle dark mode
     if (fadeMode) {

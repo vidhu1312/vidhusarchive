@@ -1,3 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Carpet Warpet</title>
+<style>
+* {
+margin: 0;
+padding: 0;
+box-sizing: border-box;
+}
+
+body {
+margin: 0;
+padding: 0;
+display: flex;
+justify-content: center;
+align-items: center;
+min-height: 100vh;
+background: #d4d1cd;
+font-family: 'Georgia', serif;
+}
+
+#ipadFrame {
+width: 820px;
+height: 1180px;
+background: #1a1a1a;
+border-radius: 40px;
+padding: 60px 20px;
+box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+position: relative;
+}
+
+#ipadFrame::before {
+content: '';
+position: absolute;
+top: 20px;
+left: 50%;
+transform: translateX(-50%);
+width: 80px;
+height: 6px;
+background: #333;
+border-radius: 3px;
+}
+
+#screen {
+width: 100%;
+height: 100%;
+background: white;
+border-radius: 20px;
+overflow: hidden;
+position: relative;
+transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+#screen.dark-mode {
+background: #1a1a1a;
+color: white;
+}
+
+.page {
+display: none;
+width: 100%;
+height: 100%;
+padding: 40px;
+}
+
+.page.active {
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+}
+
+#onboarding {
+text-align: center;
+}
+
+#onboarding h1 {
+font-size: 72px;
+font-weight: 400;
+margin-bottom: 60px;
+color: #1a1a1a;
+}
+
+.carpet-grid {
+display: grid;
+grid-template-columns: repeat(3, 1fr);
+gap: 20px;
+margin-top: 40px;
+}
+
+.carpet-option {
+width: 180px;
+height: 240px;
+border: 3px solid #ddd;
+border-radius: 16px;
+cursor: pointer;
+transition: all 0.3s;
+overflow: hidden;
+position: relative;
+}
+
+.carpet-option:hover {
+border-color: #667eea;
+transform: scale(1.05);
+}
+
+.carpet-option img {
+width: 100%;
+height: 100%;
+object-fit: cover;
+display: block;
+}
+
+.carpet-label {
+margin-top: 10px;
+font-size: 18px;
+color: #000;
+}
+
+#carpetPage {
+padding: 20px;
+justify-content: flex-start;
+}
+
+.mode-toggle-container {
+display: flex;
+justify-content: center;
+width: 100%;
+margin-bottom: 25px;
+}
+
+#modeBtn {
+padding: 16px 40px;
+font-size: 20px;
+font-weight: 600;
+cursor: pointer;
+border: none;
+border-radius: 16px;
+font-family: 'Georgia', serif;
+transition: all 0.3s;
+background: linear-gradient(135deg, #d6c9b4 0%, #b8a78b 100%);
+color: #3a3a3a;
+box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+letter-spacing: 0.5px;
+}
+
+#modeBtn:hover {
+transform: translateY(-2px);
+box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+background: linear-gradient(135deg, #c9bca7 0%, #a89a7e 100%);
+}
+
+#modeBtn:active {
+transform: translateY(0);
+}
+
+.controls {
+display: flex;
+gap: 15px;
+margin-bottom: 20px;
+width: 100%;
+justify-content: space-between;
+align-items: center;
+}
+
+.btn {
+padding: 12px 24px;
+font-size: 16px;
+cursor: pointer;
+border: none;
+border-radius: 12px;
+font-family: 'Georgia', serif;
+transition: all 0.2s;
+background: #667eea;
+color: white;
+}
+
+.btn:hover {
+background: #5568d3;
+transform: translateY(-2px);
+}
+
+.btn-secondary {
+background: #f0f0f0;
+color: #000;
+}
+
+.btn-secondary:hover {
+background: #e0e0e0;
+}
+
+#screen.dark-mode .btn-secondary {
+background: #333;
+color: white;
+}
+
+#screen.dark-mode .btn-secondary:hover {
+background: #444;
+}
+
+.instructions {
+font-size: 14px;
+color: #000;
+/* Hide one instruction span and show the other, or update the content */
+}
+
+#screen.dark-mode .instructions {
+color: #ccc;
+}
+
+#container {
+position: relative;
+box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+border-radius: 12px;
+overflow: hidden;
+}
+
+canvas {
+display: block;
+cursor: crosshair;
+}
+
+#overlay {
+position: absolute;
+top: 0;
+left: 0;
+pointer-events: none; /* Make overlay non-interactive */
+}
+</style>
+</head>
+<body>
+<div id="ipadFrame">
+<div id="screen">
+<div id="onboarding" class="page active">
+<h1>Carpet Warpet</h1>
+<p style="font-size: 20px; color: #000; margin-bottom: 20px;">Choose your carpet</p>
+<div class="carpet-grid">
+<div class="carpet-option" data-carpet="top">
+<img src="top.png" alt="Top Carpet" onerror="this.style.display='none'; this.parentElement.style.background='linear-gradient(135deg, #e0c3a5 0%, #c9a582 100%)';">
+</div>
+<div class="carpet-option" data-carpet="middle">
+<img src="middle.png" alt="Middle Carpet" onerror="this.style.display='none'; this.parentElement.style.background='linear-gradient(135deg, #b5926a 0%, #8b6f47 100%)';">
+</div>
+<div class="carpet-option" data-carpet="bottom">
+<img src="bottom.png" alt="Bottom Carpet" onerror="this.style.display='none'; this.parentElement.style.background='linear-gradient(135deg, #6b4423 0%, #4a2f1a 100%)';">
+</div>
+</div>
+</div>
+
+<div id="carpetPage" class="page">
+<div class="mode-toggle-container">
+<button id="modeBtn" class="btn">Restore Mode</button>
+</div>
+<div class="controls">
+<button id="backBtn" class="btn btn-secondary">← Back</button>
+<span class="instructions">Draw to fade • Switch mode to restore</span> 
+<button id="resetBtn" class="btn btn-secondary">Reset</button>
+</div>
+<div id="container">
+<canvas id="baseCanvas"></canvas>
+<canvas id="overlay"></canvas>
+</div>
+</div>
+</div>
+</div>
+
 <script>
 const container = document.getElementById('container');
 const baseCanvas = document.getElementById('baseCanvas');
@@ -11,7 +280,7 @@ const screen = document.getElementById('screen');
 let currentCarpet = null;
 let topImage = new Image();
 let isDrawing = false;
-let fadeMode = true;
+let fadeMode = true; // true means the brush will FADE (erase the overlay)
 
 // --- Helper Functions ---
 
@@ -25,6 +294,7 @@ function fillOverlayWithFade() {
 
 // --- Carpet Selection and Initialization ---
 
+// Carpet selection
 document.querySelectorAll('.carpet-option').forEach(option => {
     option.addEventListener('click', () => {
         const carpetType = option.dataset.carpet;
@@ -37,6 +307,8 @@ function loadCarpet(carpetType) {
     fadeMode = true;
     screen.classList.remove('dark-mode');
     document.getElementById('modeBtn').textContent = 'Restore Mode'; // Label shows NEXT mode
+    document.querySelector('.instructions').textContent = "Draw to fade • Switch mode to restore";
+
 
     currentCarpet = carpetType;
     topImage = new Image();
@@ -90,6 +362,8 @@ function init() {
     
     // Fill the overlay with the initial semi-transparent fade layer
     fillOverlayWithFade();
+    // The overlay is made interactive again after init
+    overlay.style.pointerEvents = 'none'; 
 }
 
 function getCanvasCoords(e) {
@@ -111,28 +385,26 @@ function getCanvasCoords(e) {
 function drawBrush(x, y) {
     const radius = 25;
     const edgeRoughness = 20; // Number of small irregular edge scatter points
-    const brushColor = 'rgba(0, 0, 0, 1)'; // Use opaque color for composite operations
+    let brushColor = 'rgba(0, 0, 0, 1)'; // Use opaque color for erasing (destination-out)
 
     overlayCtx.save();
     
     if (fadeMode) {
         // Fade Mode: Erase the semi-transparent overlay to reveal the base image.
-        // This is the desired 'faded' effect.
         overlayCtx.globalCompositeOperation = "destination-out";
-        document.querySelector('.instructions').textContent = "Draw to fade • Switch mode to restore"; // Update instruction text
+        document.querySelector('.instructions').textContent = "Draw to fade • Switch mode to restore"; 
     } else {
         // Restore Mode: Draw the semi-transparent color back onto the overlay.
-        // This 'restores' the fade layer, covering the base image again.
         overlayCtx.globalCompositeOperation = "source-over";
         // When restoring, we draw the original fade color
         brushColor = 'rgba(255, 255, 255, 0.5)'; 
-        document.querySelector('.instructions').textContent = "Draw to restore • Switch mode to fade"; // Update instruction text
+        document.querySelector('.instructions').textContent = "Draw to restore • Switch mode to fade"; 
     }
 
     // 1. Draw a main circular shape
     overlayCtx.fillStyle = brushColor;
     overlayCtx.beginPath();
-    overlayCtx.arc(x, y, radius * 0.9, 0, Math.PI * 2); // Slightly smaller for better edge control
+    overlayCtx.arc(x, y, radius * 0.9, 0, Math.PI * 2); 
     overlayCtx.fill();
 
     // 2. Add rough edges (small, random dots/squares around the main circle)
@@ -170,7 +442,7 @@ function stopDrawing(e) {
     isDrawing = false;
 }
 
-// Mouse events
+// Mouse events (attached to baseCanvas, which is underneath the overlay)
 baseCanvas.addEventListener('mousedown', startDrawing);
 baseCanvas.addEventListener('mousemove', draw);
 baseCanvas.addEventListener('mouseup', stopDrawing);
@@ -186,7 +458,7 @@ baseCanvas.addEventListener('touchend', stopDrawing);
 document.getElementById('resetBtn').addEventListener('click', () => {
     // Reset means re-applying the initial fade layer
     fillOverlayWithFade();
-    // Ensure instructions are correct after reset
+    // Re-set the correct instruction text
     if (fadeMode) {
         document.querySelector('.instructions').textContent = "Draw to fade • Switch mode to restore";
     } else {
@@ -202,6 +474,7 @@ document.getElementById('modeBtn').addEventListener('click', () => {
     // Toggle dark mode (cosmetic change for "restore" mode)
     if (fadeMode) {
         screen.classList.remove('dark-mode');
+        // Instructions are updated within drawBrush but set here too for instant feedback
         document.querySelector('.instructions').textContent = "Draw to fade • Switch mode to restore";
     } else {
         screen.classList.add('dark-mode');
@@ -216,5 +489,5 @@ document.getElementById('backBtn').addEventListener('click', () => {
     screen.classList.remove('dark-mode');
 });
 </script>
-
-
+</body>
+</html>

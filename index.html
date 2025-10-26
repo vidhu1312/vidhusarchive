@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -276,6 +277,8 @@ let currentCarpet = null;
 let topImage = new Image();
 let isDrawing = false;
 let fadeMode = true;
+let lastX = null;
+let lastY = null;
 
 // Carpet selection
 document.querySelectorAll('.carpet-option').forEach(option => {
@@ -354,53 +357,26 @@ y: e.clientY - rect.top
 }
 
 function drawBrush(x, y) {
-const radius = 25;
-const edgeRoughness = 15; // small irregular edge scatter
+const radius = 30;
 
 if (fadeMode) {
-// Smooth fade with clear edge strokes
 overlayCtx.save();
 overlayCtx.globalCompositeOperation = "source-over";
-const gradient = overlayCtx.createRadialGradient(x, y, 0, x, y, radius);
-gradient.addColorStop(0, "rgba(255,255,255,0.5)");
-gradient.addColorStop(1, "rgba(255,255,255,0)");
-overlayCtx.fillStyle = gradient;
+overlayCtx.globalAlpha = 0.15;
+overlayCtx.fillStyle = "white";
 overlayCtx.beginPath();
 overlayCtx.arc(x, y, radius, 0, Math.PI * 2);
 overlayCtx.fill();
-
-// Subtle rough edges
-for (let i = 0; i < edgeRoughness; i++) {
-const angle = Math.random() * Math.PI * 2;
-const dist = radius * (0.9 + Math.random() * 0.2);
-const nx = x + Math.cos(angle) * dist;
-const ny = y + Math.sin(angle) * dist;
-overlayCtx.globalAlpha = 0.1 + Math.random() * 0.2;
-overlayCtx.fillStyle = "rgba(255,255,255,1)";
-overlayCtx.fillRect(nx, ny, 2, 2);
-}
 overlayCtx.restore();
 
 } else {
-// Erase mode
 overlayCtx.save();
 overlayCtx.globalCompositeOperation = "destination-out";
-const gradient = overlayCtx.createRadialGradient(x, y, 0, x, y, radius);
-gradient.addColorStop(0, "rgba(0,0,0,0.5)");
-gradient.addColorStop(1, "rgba(0,0,0,0)");
-overlayCtx.fillStyle = gradient;
+overlayCtx.globalAlpha = 0.15;
+overlayCtx.fillStyle = "black";
 overlayCtx.beginPath();
 overlayCtx.arc(x, y, radius, 0, Math.PI * 2);
 overlayCtx.fill();
-for (let i = 0; i < edgeRoughness; i++) {
-const angle = Math.random() * Math.PI * 2;
-const dist = radius * (0.9 + Math.random() * 0.2);
-const nx = x + Math.cos(angle) * dist;
-const ny = y + Math.sin(angle) * dist;
-overlayCtx.globalAlpha = 0.1 + Math.random() * 0.2;
-overlayCtx.fillStyle = "rgba(0,0,0,1)";
-overlayCtx.fillRect(nx, ny, 2, 2);
-}
 overlayCtx.restore();
 }
 }
@@ -409,6 +385,8 @@ function startDrawing(e) {
 e.preventDefault();
 isDrawing = true;
 const coords = getCanvasCoords(e);
+lastX = coords.x;
+lastY = coords.y;
 drawBrush(coords.x, coords.y);
 }
 
@@ -416,12 +394,26 @@ function draw(e) {
 e.preventDefault();
 if (!isDrawing) return;
 const coords = getCanvasCoords(e);
-drawBrush(coords.x, coords.y);
+
+const dist = Math.sqrt((coords.x - lastX) ** 2 + (coords.y - lastY) ** 2);
+const steps = Math.max(1, Math.floor(dist / 2));
+
+for (let i = 0; i <= steps; i++) {
+const t = i / steps;
+const ix = lastX + (coords.x - lastX) * t;
+const iy = lastY + (coords.y - lastY) * t;
+drawBrush(ix, iy);
+}
+
+lastX = coords.x;
+lastY = coords.y;
 }
 
 function stopDrawing(e) {
 e.preventDefault();
 isDrawing = false;
+lastX = null;
+lastY = null;
 }
 
 // Mouse events
@@ -459,4 +451,5 @@ screen.classList.remove('dark-mode');
 </script>
 </body>
 </html>
+```
 

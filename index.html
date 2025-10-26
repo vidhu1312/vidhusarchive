@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -113,6 +112,12 @@ width: 100%;
 height: 100%;
 object-fit: cover;
 display: block;
+}
+
+.carpet-label {
+margin-top: 10px;
+font-size: 18px;
+color: #000;
 }
 
 #carpetPage {
@@ -232,17 +237,17 @@ pointer-events: none;
 <div id="onboarding" class="page active">
 <h1>Carpet Warpet</h1>
 <p style="font-size: 20px; color: #000; margin-bottom: 20px;">Choose your carpet</p>
-      <div class="carpet-grid">
-        <div class="carpet-option" data-carpet="top">
-          <img src="top.png" alt="Top Carpet" onerror="this.style.display='none'; this.parentElement.style.background='linear-gradient(135deg, #e0c3a5 0%, #c9a582 100%)';">
-        </div>
-        <div class="carpet-option" data-carpet="middle">
-          <img src="middle.png" alt="Middle Carpet" onerror="this.style.display='none'; this.parentElement.style.background='linear-gradient(135deg, #b5926a 0%, #8b6f47 100%)';">
-        </div>
-        <div class="carpet-option" data-carpet="bottom">
-          <img src="bottom.png" alt="Bottom Carpet" onerror="this.style.display='none'; this.parentElement.style.background='linear-gradient(135deg, #6b4423 0%, #4a2f1a 100%)';">
-        </div>
-      </div>
+<div class="carpet-grid">
+<div class="carpet-option" data-carpet="top">
+<img src="top.png" alt="Top Carpet" onerror="this.style.display='none'; this.parentElement.style.background='linear-gradient(135deg, #e0c3a5 0%, #c9a582 100%)';">
+</div>
+<div class="carpet-option" data-carpet="middle">
+<img src="middle.png" alt="Middle Carpet" onerror="this.style.display='none'; this.parentElement.style.background='linear-gradient(135deg, #b5926a 0%, #8b6f47 100%)';">
+</div>
+<div class="carpet-option" data-carpet="bottom">
+<img src="bottom.png" alt="Bottom Carpet" onerror="this.style.display='none'; this.parentElement.style.background='linear-gradient(135deg, #6b4423 0%, #4a2f1a 100%)';">
+</div>
+</div>
 </div>
 
 <!-- Carpet Page -->
@@ -252,6 +257,7 @@ pointer-events: none;
 </div>
 <div class="controls">
 <button id="backBtn" class="btn btn-secondary">← Back</button>
+<span class="instructions">Draw to fade • Switch mode to restore</span>
 <span class="instructions">Draw on the carpet! Switch modes to erase.</span>
 <button id="resetBtn" class="btn btn-secondary">Reset</button>
 </div>
@@ -277,8 +283,6 @@ let currentCarpet = null;
 let topImage = new Image();
 let isDrawing = false;
 let fadeMode = true;
-let lastX = null;
-let lastY = null;
 
 // Carpet selection
 document.querySelectorAll('.carpet-option').forEach(option => {
@@ -289,6 +293,7 @@ loadCarpet(carpetType);
 });
 
 function loadCarpet(carpetType) {
+// Reset to fade mode when loading new carpet
 // Always start with fade mode when a new carpet is opened
 fadeMode = true;
 screen.classList.remove('dark-mode');
@@ -307,21 +312,37 @@ carpetPage.classList.add('active');
 
 topImage.onerror = () => {
 console.error(`Failed to load ${carpetType}.png`);
+// Create fallback with bigger canvas
 baseCanvas.width = 700;
 baseCanvas.height = 900;
 overlay.width = 700;
 overlay.height = 900;
+
+// Create a sample carpet pattern
 baseCtx.fillStyle = carpetType === 'top' ? '#c9a582' : carpetType === 'middle' ? '#8b6f47' : '#4a2f1a';
 baseCtx.fillRect(0, 0, baseCanvas.width, baseCanvas.height);
+
+// Add pattern
+baseCtx.strokeStyle = 'rgba(255,255,255,0.1)';
+baseCtx.lineWidth = 2;
+for (let i = 0; i < baseCanvas.width; i += 30) {
+for (let j = 0; j < baseCanvas.height; j += 30) {
+baseCtx.strokeRect(i, j, 30, 30);
+}
+}
+
 baseCtx.fillStyle = 'white';
 baseCtx.font = '20px Georgia';
 baseCtx.textAlign = 'center';
 baseCtx.fillText(`Draw on me! (${carpetType}.png not found)`, baseCanvas.width/2, 50);
+
+// Create a fake image for the drawing function
 topImage = document.createElement('canvas');
 topImage.width = baseCanvas.width;
 topImage.height = baseCanvas.height;
 const ctx = topImage.getContext('2d');
 ctx.drawImage(baseCanvas, 0, 0);
+
 onboardingPage.classList.remove('active');
 carpetPage.classList.add('active');
 };
@@ -357,26 +378,78 @@ y: e.clientY - rect.top
 }
 
 function drawBrush(x, y) {
-const radius = 30;
+const radius = 20;
+const edgeRoughness = 40; // number of rough points at edge
+const radius = 25;
+const edgeRoughness = 15; // small irregular edge scatter
 
 if (fadeMode) {
+// Fade mode: apply faded effect with gradient and rough edges
+// Smooth fade with clear edge strokes
 overlayCtx.save();
 overlayCtx.globalCompositeOperation = "source-over";
-overlayCtx.globalAlpha = 0.15;
-overlayCtx.fillStyle = "white";
+
+// Main gradient fade
+const gradient = overlayCtx.createRadialGradient(x, y, 0, x, y, radius);
+gradient.addColorStop(0, "rgba(255,255,255,0.4)");
+gradient.addColorStop(0.7, "rgba(255,255,255,0.3)");
+gradient.addColorStop(0, "rgba(255,255,255,0.5)");
+gradient.addColorStop(1, "rgba(255,255,255,0)");
+
+overlayCtx.fillStyle = gradient;
 overlayCtx.beginPath();
 overlayCtx.arc(x, y, radius, 0, Math.PI * 2);
 overlayCtx.fill();
+
+// Add rough edges
+// Subtle rough edges
+for (let i = 0; i < edgeRoughness; i++) {
+const angle = Math.random() * Math.PI * 2;
+const dist = radius * (0.85 + Math.random() * 0.25);
+const dist = radius * (0.9 + Math.random() * 0.2);
+const nx = x + Math.cos(angle) * dist;
+const ny = y + Math.sin(angle) * dist;
+overlayCtx.globalAlpha = 0.2 + Math.random() * 0.3;
+overlayCtx.globalAlpha = 0.1 + Math.random() * 0.2;
+overlayCtx.fillStyle = "rgba(255,255,255,1)";
+overlayCtx.fillRect(nx, ny, 1 + Math.random() * 2, 1 + Math.random() * 2);
+overlayCtx.fillRect(nx, ny, 2, 2);
+}
+
 overlayCtx.restore();
 
 } else {
+// Restore mode: erase with same effect and rough edges
+// Erase mode
 overlayCtx.save();
 overlayCtx.globalCompositeOperation = "destination-out";
-overlayCtx.globalAlpha = 0.15;
-overlayCtx.fillStyle = "black";
+
+// Main gradient erase
+const gradient = overlayCtx.createRadialGradient(x, y, 0, x, y, radius);
+gradient.addColorStop(0, "rgba(0,0,0,0.4)");
+gradient.addColorStop(0.7, "rgba(0,0,0,0.3)");
+gradient.addColorStop(0, "rgba(0,0,0,0.5)");
+gradient.addColorStop(1, "rgba(0,0,0,0)");
+
+overlayCtx.fillStyle = gradient;
 overlayCtx.beginPath();
 overlayCtx.arc(x, y, radius, 0, Math.PI * 2);
 overlayCtx.fill();
+
+// Add rough edges
+for (let i = 0; i < edgeRoughness; i++) {
+const angle = Math.random() * Math.PI * 2;
+const dist = radius * (0.85 + Math.random() * 0.25);
+const dist = radius * (0.9 + Math.random() * 0.2);
+const nx = x + Math.cos(angle) * dist;
+const ny = y + Math.sin(angle) * dist;
+overlayCtx.globalAlpha = 0.2 + Math.random() * 0.3;
+overlayCtx.globalAlpha = 0.1 + Math.random() * 0.2;
+overlayCtx.fillStyle = "rgba(0,0,0,1)";
+overlayCtx.fillRect(nx, ny, 1 + Math.random() * 2, 1 + Math.random() * 2);
+overlayCtx.fillRect(nx, ny, 2, 2);
+}
+
 overlayCtx.restore();
 }
 }
@@ -385,8 +458,6 @@ function startDrawing(e) {
 e.preventDefault();
 isDrawing = true;
 const coords = getCanvasCoords(e);
-lastX = coords.x;
-lastY = coords.y;
 drawBrush(coords.x, coords.y);
 }
 
@@ -394,26 +465,12 @@ function draw(e) {
 e.preventDefault();
 if (!isDrawing) return;
 const coords = getCanvasCoords(e);
-
-const dist = Math.sqrt((coords.x - lastX) ** 2 + (coords.y - lastY) ** 2);
-const steps = Math.max(1, Math.floor(dist / 2));
-
-for (let i = 0; i <= steps; i++) {
-const t = i / steps;
-const ix = lastX + (coords.x - lastX) * t;
-const iy = lastY + (coords.y - lastY) * t;
-drawBrush(ix, iy);
-}
-
-lastX = coords.x;
-lastY = coords.y;
+drawBrush(coords.x, coords.y);
 }
 
 function stopDrawing(e) {
 e.preventDefault();
 isDrawing = false;
-lastX = null;
-lastY = null;
 }
 
 // Mouse events
@@ -434,7 +491,10 @@ overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
 
 document.getElementById('modeBtn').addEventListener('click', () => {
 fadeMode = !fadeMode;
+// Label shows CURRENT mode
 document.getElementById('modeBtn').textContent = fadeMode ? 'Fade Mode' : 'Restore Mode';
+
+// Toggle dark mode
 if (fadeMode) {
 screen.classList.remove('dark-mode');
 } else {
@@ -451,5 +511,5 @@ screen.classList.remove('dark-mode');
 </script>
 </body>
 </html>
-```
+
 

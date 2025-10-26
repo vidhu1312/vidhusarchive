@@ -281,14 +281,14 @@ const instructionsSpan = document.querySelector('.instructions');
 let currentCarpet = null;
 let topImage = new Image();
 let isDrawing = false;
-let fadeMode = true;
+let fadeMode = true; // true means the brush will FADE (apply the overlay)
 
 // --- Helper Functions ---
 
-function fillOverlayWithFade() {
-    overlayCtx.globalCompositeOperation = "source-over";
-    overlayCtx.fillStyle = "rgba(255, 255, 255, 0.5)"; 
-    overlayCtx.fillRect(0, 0, overlay.width, overlay.height);
+// In this version, the overlay starts clear, so fillOverlayWithFade is no longer needed.
+// Reset now just clears the overlay.
+function clearOverlay() {
+    overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
 }
 
 // --- Carpet Selection and Initialization ---
@@ -301,9 +301,10 @@ document.querySelectorAll('.carpet-option').forEach(option => {
 });
 
 function loadCarpet(carpetType) {
-    fadeMode = true;
+    // Start in Fade Mode
+    fadeMode = true; 
     screen.classList.remove('dark-mode');
-    document.getElementById('modeBtn').textContent = 'Restore Mode';
+    document.getElementById('modeBtn').textContent = 'Restore Mode'; // Label shows NEXT mode
     instructionsSpan.textContent = "Draw to fade • Switch mode to restore";
 
     currentCarpet = carpetType;
@@ -335,7 +336,7 @@ function loadCarpet(carpetType) {
         baseCtx.textAlign = 'center';
         baseCtx.fillText(`Draw on me! (${carpetType}.png not found)`, baseCanvas.width/2, 50);
 
-        fillOverlayWithFade();
+        clearOverlay(); // Ensure overlay is clear (full color visible)
 
         onboardingPage.classList.remove('active');
         carpetPage.classList.add('active');
@@ -353,9 +354,11 @@ function init() {
     overlay.width = baseCanvas.width;
     overlay.height = baseCanvas.height;
 
+    // Draw the original carpet image on the base canvas
     baseCtx.drawImage(topImage, 0, 0, baseCanvas.width, baseCanvas.height);
     
-    fillOverlayWithFade();
+    // START: Overlay is CLEAR, showing full color
+    clearOverlay();
     
     // Ensure pointer events are active on the overlay
     overlay.style.pointerEvents = 'auto'; 
@@ -380,34 +383,62 @@ function getCanvasCoords(e) {
 function drawBrush(x, y) {
     const radius = 25;
     const edgeRoughness = 20;
-    let brushColor = 'rgba(0, 0, 0, 1)';
+    // Semi-transparent white for the 'faded' look
+    const fadeColor = "rgba(255, 255, 255, 0.45)"; 
 
     overlayCtx.save();
     
     if (fadeMode) {
-        overlayCtx.globalCompositeOperation = "destination-out";
-        instructionsSpan.textContent = "Draw to fade • Switch mode to restore"; 
-    } else {
+        // Fade Mode: Draw the white overlay (Source-over)
         overlayCtx.globalCompositeOperation = "source-over";
-        brushColor = 'rgba(255, 255, 255, 0.5)'; 
-        instructionsSpan.textContent = "Draw to restore • Switch mode to fade"; 
-    }
-
-    // 1. Draw a main circular shape
-    overlayCtx.fillStyle = brushColor;
-    overlayCtx.beginPath();
-    overlayCtx.arc(x, y, radius * 0.9, 0, Math.PI * 2); 
-    overlayCtx.fill();
-
-    // 2. Add rough edges
-    for (let i = 0; i < edgeRoughness; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        const dist = radius * (0.7 + Math.random() * 0.6); 
-        const nx = x + Math.cos(angle) * dist;
-        const ny = y + Math.sin(angle) * dist;
+        instructionsSpan.textContent = "Draw to fade • Switch mode to restore"; 
         
-        const size = 1 + Math.random() * 2;
-        overlayCtx.fillRect(nx, ny, size, size);
+        // 1. Create a soft gradient for the main stroke (like dust/light)
+        const gradient = overlayCtx.createRadialGradient(x, y, 0, x, y, radius);
+        gradient.addColorStop(0, fadeColor);
+        gradient.addColorStop(0.7, fadeColor);
+        gradient.addColorStop(1, "rgba(255, 255, 255, 0)"); // Fades out
+        
+        overlayCtx.fillStyle = gradient;
+        overlayCtx.beginPath();
+        overlayCtx.arc(x, y, radius, 0, Math.PI * 2); 
+        overlayCtx.fill();
+
+        // 2. Add rough edges (using a solid white for contrast/texture)
+        overlayCtx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+        for (let i = 0; i < edgeRoughness; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const dist = radius * (0.8 + Math.random() * 0.3); 
+            const nx = x + Math.cos(angle) * dist;
+            const ny = y + Math.sin(angle) * dist;
+            const size = 1 + Math.random() * 2;
+            overlayCtx.fillRect(nx, ny, size, size);
+        }
+
+    } else {
+        // Restore Mode: Erase the overlay (Destination-out)
+        overlayCtx.globalCompositeOperation = "destination-out";
+        instructionsSpan.textContent = "Draw to restore • Switch mode to fade"; 
+        
+        // Use a solid color for erasing, as only the opacity matters for destination-out
+        const eraseColor = "rgba(0, 0, 0, 1)"; 
+
+        // 1. Draw a main circular shape for effective erasing
+        overlayCtx.fillStyle = eraseColor;
+        overlayCtx.beginPath();
+        overlayCtx.arc(x, y, radius * 1.1, 0, Math.PI * 2); // Slightly larger brush for full erase
+        overlayCtx.fill();
+
+        // 2. Add rough edges for a frayed look when restoring
+        overlayCtx.fillStyle = eraseColor;
+        for (let i = 0; i < edgeRoughness; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const dist = radius * (0.8 + Math.random() * 0.3); 
+            const nx = x + Math.cos(angle) * dist;
+            const ny = y + Math.sin(angle) * dist;
+            const size = 1 + Math.random() * 2;
+            overlayCtx.fillRect(nx, ny, size, size);
+        }
     }
     
     overlayCtx.restore();
@@ -432,7 +463,7 @@ function stopDrawing(e) {
     isDrawing = false;
 }
 
-// Attach all events to the #overlay canvas
+// Attach all events to the #overlay canvas (the top layer)
 overlay.addEventListener('mousedown', startDrawing);
 overlay.addEventListener('mousemove', draw);
 overlay.addEventListener('mouseup', stopDrawing);
@@ -446,7 +477,8 @@ overlay.addEventListener('touchend', stopDrawing);
 // --- Buttons ---
 
 document.getElementById('resetBtn').addEventListener('click', () => {
-    fillOverlayWithFade();
+    // Reset clears the overlay, restoring full color
+    clearOverlay(); 
     if (fadeMode) {
         instructionsSpan.textContent = "Draw to fade • Switch mode to restore";
     } else {
@@ -470,7 +502,7 @@ document.getElementById('modeBtn').addEventListener('click', () => {
 document.getElementById('backBtn').addEventListener('click', () => {
     carpetPage.classList.remove('active');
     onboardingPage.classList.add('active');
-    overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
+    clearOverlay();
     screen.classList.remove('dark-mode');
 });
 </script>

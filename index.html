@@ -271,7 +271,7 @@ opacity: 0; /* Make it invisible */
 <script>
 const baseCanvas = document.getElementById('baseCanvas');
 const baseCtx = baseCanvas.getContext('2d');
-// ... (other global variables remain the same) ...
+// Note: #overlay element is ignored for this pixel-based approach, which is cleaner
 const onboardingPage = document.getElementById('onboarding');
 const carpetPage = document.getElementById('carpetPage');
 const screen = document.getElementById('screen');
@@ -282,44 +282,52 @@ let originalCarpetImage = new Image();
 let isDrawing = false;
 let fadeMode = true;
 
-// --- Hidden Canvas for Original Image Data ---
-const hiddenCanvas = document.createElement('canvas');
+// --- Hidden Canvases for State Management ---
+const hiddenCanvas = document.createElement('canvas'); // Stores PRISTINE (Original) data
 const hiddenCtx = hiddenCanvas.getContext('2d');
 
+const fadedCanvas = document.createElement('canvas'); // Stores FADED (Brushed) data
+const fadedCtx = fadedCanvas.getContext('2d');
+
 // --- Hidden Canvas for Brush Texture Masking ---
-// We will use a dedicated context to draw the brush grain
 const maskCanvas = document.createElement('canvas');
 const maskCtx = maskCanvas.getContext('2d');
 
+// --- Configuration ---
+const BRUSH_RADIUS = 25; // Main brush size
+const FADE_STRENGTH_GLOBAL = 0.5; // Fixed strength for the one-time fade effect (0 to 1)
+
 // --- Helper Functions ---
 
-// Applies a fade effect (lighten and desaturate) to a pixel
-function applyFade(r, g, b, fadeAmount = 0.2) { 
-    // Calculate Luminosity (grayscale value)
-    const gray = (r * 0.299 + g * 0.587 + b * 0.114);
+/**
+ * Applies a fixed fade (desaturation/lighten) to a single pixel.
+ * Used only once during initialization to create the 'fadedCanvas' state.
+ */
+function applyFixedFade(r, g, b) { 
+    // Calculate Luminosity (grayscale value)
+    const gray = (r * 0.299 + g * 0.587 + b * 0.114);
+    
+    // Desaturation: Blend current color toward gray (using global strength)
+    const desatR = r + (gray - r) * FADE_STRENGTH_GLOBAL; 
+    const desatG = g + (gray - g) * FADE_STRENGTH_GLOBAL;
+    const desatB = b + (gray - b) * FADE_STRENGTH_GLOBAL;
 
-    // Desaturation: Blend current color (r,g,b) toward gray
-    const desatR = r + (gray - r) * fadeAmount; 
-    const desatG = g + (gray - g) * fadeAmount;
-    const desatB = b + (gray - b) * fadeAmount;
+    // Lightening: Blend desaturated color toward a light-gray (220)
+    const targetLight = 220;
+    const lightenAmount = FADE_STRENGTH_GLOBAL * 0.5;
 
-    // Lightening: Blend desaturated color toward a light-gray (e.g., 220)
-    const targetLight = 220;
-    const lightenAmount = fadeAmount * 0.5; // Less aggressive lightening
-
-    return {
-        r: Math.min(255, desatR + (targetLight - desatR) * lightenAmount),
-        g: Math.min(255, desatG + (targetLight - desatG) * lightenAmount),
-        b: Math.min(255, desatB + (targetLight - desatB) * lightenAmount)
-    };
+    return {
+        r: Math.min(255, desatR + (targetLight - desatR) * lightenAmount),
+        g: Math.min(255, desatG + (targetLight - desatG) * lightenAmount),
+        b: Math.min(255, desatB + (targetLight - desatB) * lightenAmount)
+    };
 }
 
-// Function to draw the grain shape onto the maskCanvas
-function drawGrainMask(x, y, radius) {
-    // We only need to draw the texture once for the bounding box
-    // But since the texture changes every time, we draw it locally and get its data
-
-    // Re-size the mask canvas to the brush area bounding box for efficient pixel grabbing
+/**
+ * Renders the grainy texture onto the maskCanvas context.
+ * This texture acts as the stencil for pixel operations.
+ */
+function drawGrainMask(radius) {
     maskCanvas.width = radius * 2;
     maskCanvas.height = radius * 2;
     maskCtx.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
@@ -327,34 +335,45 @@ function drawGrainMask(x, y, radius) {
     const center = radius;
     const grainCount = 40;
     
-    // Draw the texture particles using a black color (opaque mask)
     maskCtx.fillStyle = `rgba(0, 0, 0, 1)`;
     maskCtx.globalCompositeOperation = 'source-over';
     
+    // Draw particles for texture
     for (let i = 0; i < grainCount; i++) {
-        // Random offset within brush radius for grainy effect
         const angle = Math.random() * Math.PI * 2;
         const distance = Math.random() * radius * 0.9;
         const px = center + Math.cos(angle) * distance;
         const py = center + Math.sin(angle) * distance;
         
         maskCtx.beginPath();
-        maskCtx.arc(px, py, 2 + Math.random() * 1.5, 0, Math.PI * 2); // Smaller particles
+        maskCtx.arc(px, py, 2 + Math.random() * 1.5, 0, Math.PI * 2);
         maskCtx.fill();
     }
-    
-    // Add a slightly softer edge/center blend for continuity
-    maskCtx.globalAlpha = 0.1;
-    maskCtx.beginPath();
-    maskCtx.arc(center, center, radius * 0.8, 0, Math.PI * 2);
-    maskCtx.fill();
-    maskCtx.globalAlpha = 1;
-
-    // The mask data will be grabbed from (0, 0) of the maskCanvas
 }
 
-// --- Image Loading (Unchanged) ---
-// (The loadCarpet and init functions remain the same as they correctly set up the canvases)
+/**
+ * Runs the fixed fade effect on an entire canvas once.
+ */
+function preCalculateFadedState(sourceCtx, targetCtx, width, height) {
+    const imageData = sourceCtx.getImageData(0, 0, width, height);
+    const pixels = imageData.data;
+
+    for (let i = 0; i < pixels.length; i += 4) {
+        const r = pixels[i];
+        const g = pixels[i + 1];
+        const b = pixels[i + 2];
+        
+        const faded = applyFixedFade(r, g, b);
+        
+        pixels[i] = faded.r;
+        pixels[i + 1] = faded.g;
+        pixels[i + 2] = faded.b;
+    }
+
+    targetCtx.putImageData(imageData, 0, 0);
+}
+
+// --- Image Loading and Initialization (Modified to include faded state) ---
 
 document.querySelectorAll('.carpet-option').forEach(option => {
     option.addEventListener('click', () => {
@@ -364,7 +383,7 @@ document.querySelectorAll('.carpet-option').forEach(option => {
 });
 
 function loadCarpet(carpetType) {
-    fadeMode = true;
+    fadeMode = true; 
     screen.classList.remove('dark-mode');
     document.getElementById('modeBtn').textContent = 'Restore Mode';
     instructionsSpan.textContent = "Draw to fade • Switch mode to restore";
@@ -385,21 +404,20 @@ function loadCarpet(carpetType) {
         
         baseCanvas.width = 700;
         baseCanvas.height = 900;
-        hiddenCanvas.width = baseCanvas.width;
-        hiddenCanvas.height = baseCanvas.height;
+        hiddenCanvas.width = fadedCanvas.width = baseCanvas.width;
+        hiddenCanvas.height = fadedCanvas.height = baseCanvas.height;
 
         const fallbackColor = carpetType === 'top' ? '#c9a582' : carpetType === 'middle' ? '#8b6f47' : '#4a2f1a';
         
-        baseCtx.fillStyle = fallbackColor;
-        baseCtx.fillRect(0, 0, baseCanvas.width, baseCanvas.height);
-        
-        baseCtx.fillStyle = 'white';
-        baseCtx.font = '20px Georgia';
-        baseCtx.textAlign = 'center';
-        baseCtx.fillText(`Draw on me! (${carpetType}.png not found)`, baseCanvas.width/2, 50);
-
+        // Draw fallback to hidden (pristine)
         hiddenCtx.fillStyle = fallbackColor;
         hiddenCtx.fillRect(0, 0, hiddenCanvas.width, hiddenCanvas.height);
+        
+        // Calculate and draw fallback to faded
+        preCalculateFadedState(hiddenCtx, fadedCtx, hiddenCanvas.width, hiddenCanvas.height);
+
+        // Draw pristine state to display
+        baseCtx.drawImage(hiddenCanvas, 0, 0); 
         
         onboardingPage.classList.remove('active');
         carpetPage.classList.add('active');
@@ -414,12 +432,21 @@ function init() {
 
     baseCanvas.width = originalCarpetImage.width * scale;
     baseCanvas.height = originalCarpetImage.height * scale;
+    const w = baseCanvas.width;
+    const h = baseCanvas.height;
 
-    hiddenCanvas.width = baseCanvas.width;
-    hiddenCanvas.height = baseCanvas.height;
+    hiddenCanvas.width = fadedCanvas.width = w;
+    hiddenCanvas.height = fadedCanvas.height = h;
 
-    hiddenCtx.drawImage(originalCarpetImage, 0, 0, hiddenCanvas.width, hiddenCanvas.height);
-    baseCtx.drawImage(originalCarpetImage, 0, 0, baseCanvas.width, baseCanvas.height);
+    // 1. Draw original image to HIDDEN canvas (PRISTINE state)
+    hiddenCtx.drawImage(originalCarpetImage, 0, 0, w, h);
+    
+    // 2. Calculate and draw the FADED state to fadedCanvas
+    fadedCtx.drawImage(originalCarpetImage, 0, 0, w, h); // Start with pristine image
+    preCalculateFadedState(fadedCtx, fadedCtx, w, h); // Apply the fixed pixel fade
+
+    // 3. Draw PRISTINE state to BASE canvas for initial display
+    baseCtx.drawImage(originalCarpetImage, 0, 0, w, h);
 }
 
 function getCanvasCoords(e) {
@@ -436,11 +463,10 @@ function getCanvasCoords(e) {
     };
 }
 
-// --- REVISED DRAW BRUSH ---
+// --- REVISED DRAW BRUSH (Now simply copies fixed states) ---
 
 function drawBrush(x, y) {
-    const brushRadius = 25;
-    const fadeStrength = 0.2; 
+    const brushRadius = BRUSH_RADIUS;
 
     // Calculate the bounding box for pixel manipulation
     const minX = Math.max(0, x - brushRadius);
@@ -452,49 +478,34 @@ function drawBrush(x, y) {
 
     if (width <= 0 || height <= 0) return;
 
-    // Get original pixel data from the hidden canvas
-    const originalImageData = hiddenCtx.getImageData(minX, minY, width, height);
-    const originalPixels = originalImageData.data;
-
-    // Get current pixel data from the base canvas (what's currently displayed)
+    // 1. Determine source data context (Original or Faded)
+    const sourceCtx = fadeMode ? fadedCtx : hiddenCtx;
+    
+    // 2. Get the target image data (the current display state)
     const currentImageData = baseCtx.getImageData(minX, minY, width, height);
     const currentPixels = currentImageData.data;
 
-    // 1. Draw the desired grain texture onto the temporary mask canvas
-    drawGrainMask(brushRadius, brushRadius, brushRadius); // Draw relative to the mask canvas center
+    // 3. Get the source (fixed state) image data
+    const sourceImageData = sourceCtx.getImageData(minX, minY, width, height);
+    const sourcePixels = sourceImageData.data;
+
+    // 4. Draw the desired grain texture onto the temporary mask canvas
+    drawGrainMask(brushRadius);
     const brushTexture = maskCtx.getImageData(0, 0, width, height).data;
 
-    // 2. Iterate through pixels within the brush area
+    // 5. Copy pixels based on the brush texture
     for (let i = 0; i < currentPixels.length; i += 4) {
-        // The texture data is opaque where the grain is drawn (alpha = 255)
-        // We check the texture's alpha (i + 3) to see if we should modify the carpet pixel
-        
-        // Check 1: Is this pixel within the brush area? (If the texture has any data)
-        // Check 2: We must translate the current index 'i' to the corresponding texture data index.
-        // Since we created the maskCanvas with the exact size of the bounding box (width x height),
-        // we can use the same index 'i' for both `currentPixels` and `brushTexture`.
+        // Only modify the pixel if the brush texture hits it
         if (brushTexture[i + 3] > 10) { 
-            
-            const r = currentPixels[i];
-            const g = currentPixels[i + 1];
-            const b = currentPixels[i + 2];
-            
-            if (fadeMode) {
-                // Fade Mode: Desaturate and lighten the current pixels
-                const faded = applyFade(r, g, b, fadeStrength);
-                currentPixels[i] = faded.r;
-                currentPixels[i + 1] = faded.g;
-                currentPixels[i + 2] = faded.b;
-            } else {
-                // Restore Mode: Copy original pixels from hidden canvas
-                currentPixels[i] = originalPixels[i];
-                currentPixels[i + 1] = originalPixels[i + 1];
-                currentPixels[i + 2] = originalPixels[i + 2];
-            }
+            // Copy RGB values from the fixed source state (Faded or Original)
+            currentPixels[i] = sourcePixels[i];
+            currentPixels[i + 1] = sourcePixels[i + 1];
+            currentPixels[i + 2] = sourcePixels[i + 2];
+            // Alpha (i+3) remains the same
         }
     }
 
-    // 3. Put the modified pixel data back onto the base canvas
+    // 6. Put the modified pixel data back onto the base canvas
     baseCtx.putImageData(currentImageData, minX, minY);
 }
 
@@ -532,11 +543,8 @@ baseCanvas.addEventListener('touchend', stopDrawing);
 // --- Buttons ---
 
 document.getElementById('resetBtn').addEventListener('click', () => {
-    if (originalCarpetImage.complete && originalCarpetImage.naturalWidth !== 0) {
-        baseCtx.drawImage(originalCarpetImage, 0, 0, baseCanvas.width, baseCanvas.height);
-    } else {
-        baseCtx.drawImage(hiddenCanvas, 0, 0, baseCanvas.width, baseCanvas.height);
-    }
+    // Reset draws the entire PRISTINE state from hiddenCanvas
+    baseCtx.drawImage(hiddenCanvas, 0, 0, baseCanvas.width, baseCanvas.height);
     
     if (fadeMode) {
         instructionsSpan.textContent = "Draw to fade • Switch mode to restore";

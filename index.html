@@ -5,540 +5,486 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Carpet Warpet</title>
 <style>
-* {
-margin: 0;
-padding: 0;
-box-sizing: border-box;
-}
-
-body {
-margin: 0;
-padding: 0;
-display: flex;
-justify-content: center;
-align-items: center;
-min-height: 100vh;
-background: #d4d1cd;
-font-family: 'Georgia', serif;
-}
-
-#ipadFrame {
-width: 820px;
-height: 1180px;
-background: #1a1a1a;
-border-radius: 40px;
-padding: 60px 20px;
-box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-position: relative;
-}
-
-#ipadFrame::before {
-content: '';
-position: absolute;
-top: 20px;
-left: 50%;
-transform: translateX(-50%);
-width: 80px;
-height: 6px;
-background: #333;
-border-radius: 3px;
-}
-
-#screen {
-width: 100%;
-height: 100%;
-background: white;
-border-radius: 20px;
-overflow: hidden;
-position: relative;
-transition: background-color 0.3s ease, color 0.3s ease;
-}
-
-#screen.dark-mode {
-background: #1a1a1a;
-color: white;
-}
-
-.page {
-display: none;
-width: 100%;
-height: 100%;
-padding: 40px;
-}
-
-.page.active { 
-display: flex;
-flex-direction: column;
-align-items: center;
-justify-content: center;
-}
-
-#onboarding {
-text-align: center;
-}
-
-#onboarding h1 {
-font-size: 72px;
-font-weight: 400;
-margin-bottom: 60px;
-color: #1a1a1a;
-}
-
-.carpet-grid {
-display: grid;
-grid-template-columns: repeat(3, 1fr);
-gap: 20px;
-margin-top: 40px;
-}
-
-.carpet-option {
-width: 180px;
-height: 240px;
-border: 3px solid #ddd;
-border-radius: 16px;
-cursor: pointer;
-transition: all 0.3s;
-overflow: hidden;
-position: relative;
-}
-
-.carpet-option:hover {
-border-color: #667eea;
-transform: scale(1.05);
-}
-
-.carpet-option img {
-width: 100%;
-height: 100%;
-object-fit: cover;
-display: block;
-}
-
-.carpet-label {
-margin-top: 10px;
-font-size: 18px;
-color: #000;
-}
-
-#carpetPage {
-padding: 20px;
-justify-content: flex-start;
-}
-
-.mode-toggle-container {
-display: flex;
-justify-content: center;
-width: 100%;
-margin-bottom: 25px;
-}
-
-#modeBtn {
-padding: 16px 40px;
-font-size: 20px;
-font-weight: 600;
-cursor: pointer;
-border: none;
-border-radius: 16px;
-font-family: 'Georgia', serif;
-transition: all 0.3s;
-background: linear-gradient(135deg, #d6c9b4 0%, #b8a78b 100%);
-color: #3a3a3a;
-box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-letter-spacing: 0.5px;
-}
-
-#modeBtn:hover {
-transform: translateY(-2px);
-box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
-background: linear-gradient(135deg, #c9bca7 0%, #a89a7e 100%);
-}
-
-#modeBtn:active {
-transform: translateY(0);
-}
-
-.controls {
-display: flex;
-gap: 15px;
-margin-bottom: 20px;
-width: 100%;
-justify-content: space-between;
-align-items: center;
-}
-
-.btn {
-padding: 12px 24px;
-font-size: 16px;
-cursor: pointer;
-border: none;
-border-radius: 12px;
-font-family: 'Georgia', serif;
-transition: all 0.2s;
-background: #667eea;
-color: white;
-}
-
-.btn:hover {
-background: #5568d3;
-transform: translateY(-2px);
-}
-
-.btn-secondary {
-background: #f0f0f0;
-color: #000;
-}
-
-.btn-secondary:hover {
-background: #e0e0e0;
-}
-
-#screen.dark-mode .btn-secondary {
-background: #333;
-color: white;
-}
-
-#screen.dark-mode .btn-secondary:hover {
-background: #444;
-}
-
-.instructions {
-font-size: 14px;
-color: #000;
-}
-
-#screen.dark-mode .instructions {
-color: #ccc;
-}
-
-#container {
-position: relative;
-box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-border-radius: 12px;
-overflow: hidden;
-}
-
-canvas {
-display: block;
-cursor: crosshair;
-}
-
-/* #overlay is no longer used for drawing, can remove or make transparent */
-#overlay {
-position: absolute;
-top: 0;
-left: 0;
-pointer-events: none; /* Keep pointer events none as it's not the drawing surface anymore */
-opacity: 0; /* Make it invisible */
-}
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  body {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    font-family: 'Georgia', serif;
+  }
+  
+  #ipadFrame {
+    width: 90vw;
+    max-width: 820px;
+    height: 90vh;
+    max-height: 1180px;
+    background: #1a1a1a;
+    border-radius: 40px;
+    padding: 60px 20px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    position: relative;
+  }
+  
+  #ipadFrame::before {
+    content: '';
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 6px;
+    background: #333;
+    border-radius: 3px;
+  }
+  
+  #screen {
+    width: 100%;
+    height: 100%;
+    background: white;
+    border-radius: 20px;
+    overflow: hidden;
+    position: relative;
+  }
+  
+  .page {
+    display: none;
+    width: 100%;
+    height: 100%;
+    padding: 40px;
+  }
+  
+  .page.active {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  #onboarding {
+    text-align: center;
+  }
+  
+  #onboarding h1 {
+    font-size: 72px;
+    font-weight: 400;
+    font-style: italic;
+    margin-bottom: 60px;
+    color: #1a1a1a;
+  }
+  
+  .carpet-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin-top: 40px;
+  }
+  
+  .carpet-option {
+    width: 180px;
+    height: 240px;
+    border: 3px solid #ddd;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.3s;
+    overflow: hidden;
+    position: relative;
+  }
+  
+  .carpet-option:hover {
+    border-color: #667eea;
+    transform: scale(1.05);
+  }
+  
+  .carpet-option img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .carpet-label {
+    margin-top: 10px;
+    font-size: 18px;
+    color: #000;
+  }
+  
+  #carpetPage {
+    padding: 20px;
+    justify-content: flex-start;
+  }
+  
+  .controls {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .btn {
+    padding: 12px 24px;
+    font-size: 16px;
+    cursor: pointer;
+    border: none;
+    border-radius: 12px;
+    font-family: 'Georgia', serif;
+    transition: all 0.2s;
+    background: #667eea;
+    color: white;
+  }
+  
+  .btn:hover {
+    background: #5568d3;
+    transform: translateY(-2px);
+  }
+  
+  .btn-secondary {
+    background: #f0f0f0;
+    color: #000;
+  }
+  
+  .btn-secondary:hover {
+    background: #e0e0e0;
+  }
+  
+  .instructions {
+    font-size: 14px;
+    color: #000;
+    font-style: italic;
+  }
+  
+  #container {
+    position: relative;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  
+  canvas {
+    display: block;
+    cursor: crosshair;
+  }
+  
+  /* CRITICAL: The overlay canvas MUST be on top and interactive for the brush grain technique */
+  #overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: auto; /* Allow interaction */
+    opacity: 1; /* Fully visible */
+  }
+  /* The base canvas holds the image. We draw *onto* the overlay. */
 </style>
 </head>
 <body>
 <div id="ipadFrame">
-<div id="screen">
-<div id="onboarding" class="page active">
-<h1>Carpet Warpet</h1>
-<p style="font-size: 20px; color: #000; margin-bottom: 20px;">Choose your carpet</p>
-<div class="carpet-grid">
-<div class="carpet-option" data-carpet="top">
-<img src="top.png" alt="Top Carpet" onerror="this.style.display='none'; this.parentElement.style.background='linear-gradient(135deg, #e0c3a5 0%, #c9a582 100%)';">
-</div>
-<div class="carpet-option" data-carpet="middle">
-<img src="middle.png" alt="Middle Carpet" onerror="this.style.display='none'; this.parentElement.style.background='linear-gradient(135deg, #b5926a 0%, #8b6f47 100%)';">
-</div>
-<div class="carpet-option" data-carpet="bottom">
-<img src="bottom.png" alt="Bottom Carpet" onerror="this.style.display='none'; this.parentElement.style.background='linear-gradient(135deg, #6b4423 0%, #4a2f1a 100%)';">
-</div>
-</div>
-</div>
-
-<div id="carpetPage" class="page">
-<div class="mode-toggle-container">
-<button id="modeBtn" class="btn">Restore Mode</button>
-</div>
-<div class="controls">
-<button id="backBtn" class="btn btn-secondary">← Back</button>
-<span class="instructions">Draw to fade • Switch mode to restore</span>
-<button id="resetBtn" class="btn btn-secondary">Reset</button>
-</div>
-<div id="container">
-<canvas id="baseCanvas"></canvas>
-<canvas id="overlay"></canvas> 
-</div>
-</div>
-</div>
+  <div id="screen">
+    <div id="onboarding" class="page active">
+      <h1>Carpet Warpet</h1>
+      <p style="font-size: 20px; color: #000; margin-bottom: 20px;">Choose your carpet</p>
+      <div class="carpet-grid">
+        <div style="text-align: center;">
+          <div class="carpet-option" data-carpet="top">
+            <img src="top.png" alt="Top Carpet" onerror="this.style.display='none'; this.parentElement.style.background='linear-gradient(135deg, #e0c3a5 0%, #c9a582 100%)';">
+          </div>
+          <div class="carpet-label">Top</div>
+        </div>
+        <div style="text-align: center;">
+          <div class="carpet-option" data-carpet="middle">
+             <img src="middle.png" alt="Middle Carpet" onerror="this.style.display='none'; this.parentElement.style.background='linear-gradient(135deg, #b5926a 0%, #8b6f47 100%)';">
+          </div>
+          <div class="carpet-label">Middle</div>
+        </div>
+        <div style="text-align: center;">
+          <div class="carpet-option" data-carpet="bottom">
+             <img src="bottom.png" alt="Bottom Carpet" onerror="this.style.display='none'; this.parentElement.style.background='linear-gradient(135deg, #6b4423 0%, #4a2f1a 100%)';">
+          </div>
+          <div class="carpet-label">Bottom</div>
+        </div>
+      </div>
+    </div>
+    
+    <div id="carpetPage" class="page">
+      <div class="controls">
+        <button id="backBtn" class="btn btn-secondary">← Back</button>
+        <span class="instructions">Draw to fade • Switch mode to restore</span>
+        <div style="display: flex; gap: 10px;">
+          <button id="modeBtn" class="btn">Restore Mode</button>
+          <button id="resetBtn" class="btn btn-secondary">Reset</button>
+        </div>
+      </div>
+      <div id="container">
+        <canvas id="baseCanvas"></canvas>
+        <canvas id="overlay"></canvas>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
-const baseCanvas = document.getElementById('baseCanvas');
-const baseCtx = baseCanvas.getContext('2d');
-const onboardingPage = document.getElementById('onboarding');
-const carpetPage = document.getElementById('carpetPage');
-const screen = document.getElementById('screen');
-const instructionsSpan = document.querySelector('.instructions');
+  const baseCanvas = document.getElementById('baseCanvas');
+  const overlay = document.getElementById('overlay');
+  const baseCtx = baseCanvas.getContext('2d');
+  const overlayCtx = overlay.getContext('2d');
+  const onboardingPage = document.getElementById('onboarding');
+  const carpetPage = document.getElementById('carpetPage');
+  const instructionsSpan = document.querySelector('.instructions');
+  
+  let currentCarpet = null;
+  let topImage = new Image();
+  let isDrawing = false;
+  let fadeMode = true; // true means the brush will FADE (lighten/desaturate)
 
-let currentCarpet = null;
-let originalCarpetImage = new Image(); // Stores the currently selected carpet image
-let isDrawing = false;
-let fadeMode = true; // true means the brush will FADE (lighten/desaturate)
+  // --- Hidden Canvas for Brush Texture Masking ---
+  const brushCanvas = document.createElement('canvas');
+  const brushCtx = brushCanvas.getContext('2d');
+  const BRUSH_RADIUS = 30;
+  const BRUSH_DENSITY = 12;
 
-// --- Hidden Canvas for Original Image Data ---
-const hiddenCanvas = document.createElement('canvas');
-const hiddenCtx = hiddenCanvas.getContext('2d');
+  // Set the brush canvas size once
+  brushCanvas.width = BRUSH_RADIUS * 2;
+  brushCanvas.height = BRUSH_RADIUS * 2;
 
-// --- Helper Functions ---
+  // --- Helper Functions ---
 
-// Applies a fade effect (lighten and desaturate) to a pixel
-function applyFade(r, g, b, fadeAmount = 0.3) { // fadeAmount 0 to 1
-    // Convert to grayscale for desaturation
-    const gray = (r * 0.299 + g * 0.587 + b * 0.114);
+  function drawBrushTexture() {
+      // Clear the temporary brush canvas
+      brushCtx.clearRect(0, 0, brushCanvas.width, brushCanvas.height);
+      const center = BRUSH_RADIUS;
+      
+      brushCtx.fillStyle = 'rgba(0, 0, 0, 1)'; // Opaque shape for the stencil
 
-    // Blend towards gray and white
-    const newR = r + (gray - r) * fadeAmount; // Desaturate
-    const newG = g + (gray - g) * fadeAmount;
-    const newB = b + (gray - b) * fadeAmount;
+      for (let i = 0; i < BRUSH_DENSITY; i++) {
+          const offsetX = (Math.random() - 0.5) * BRUSH_RADIUS * 0.5;
+          const offsetY = (Math.random() - 0.5) * BRUSH_RADIUS * 0.5;
+          const smallRadius = BRUSH_RADIUS * (0.3 + Math.random() * 0.4);
 
-    // Further lighten by blending towards white
-    const lightenAmount = fadeAmount * 0.5; // Controls how much brighter it gets
-    return {
-        r: Math.min(255, newR + (255 - newR) * lightenAmount),
-        g: Math.min(255, newG + (255 - newG) * lightenAmount),
-        b: Math.min(255, newB + (255 - newB) * lightenAmount)
-    };
-}
+          brushCtx.beginPath();
+          // Draw small, randomly placed shapes for grain
+          brushCtx.arc(center + offsetX, center + offsetY, smallRadius, 0, Math.PI * 2);
+          brushCtx.fill();
+      }
+      return brushCanvas;
+  }
 
-// --- Carpet Selection and Initialization ---
 
-document.querySelectorAll('.carpet-option').forEach(option => {
+  // --- Carpet Selection and Initialization ---
+  
+  document.querySelectorAll('.carpet-option').forEach(option => {
     option.addEventListener('click', () => {
-        const carpetType = option.dataset.carpet;
-        loadCarpet(carpetType);
+      const carpetType = option.dataset.carpet;
+      loadCarpet(carpetType);
     });
-});
-
-function loadCarpet(carpetType) {
-    fadeMode = true; // Start in Fade Mode
-    screen.classList.remove('dark-mode');
-    document.getElementById('modeBtn').textContent = 'Restore Mode'; // Label shows NEXT mode
+  });
+  
+  function loadCarpet(carpetType) {
+    fadeMode = true;
+    document.getElementById('modeBtn').textContent = 'Restore Mode'; // Shows next mode
     instructionsSpan.textContent = "Draw to fade • Switch mode to restore";
 
     currentCarpet = carpetType;
-    originalCarpetImage = new Image();
-    originalCarpetImage.crossOrigin = "anonymous";
-    originalCarpetImage.src = `${carpetType}.png`;
-
-    originalCarpetImage.onload = () => {
-        init();
-        onboardingPage.classList.remove('active');
-        carpetPage.classList.add('active');
+    topImage = new Image();
+    topImage.crossOrigin = "anonymous";
+    topImage.src = `${carpetType}.png`;
+    
+    topImage.onload = () => {
+      init();
+      onboardingPage.classList.remove('active');
+      carpetPage.classList.add('active');
     };
+    
+    topImage.onerror = () => {
+      console.error(`Failed to load ${carpetType}.png`);
+      // Fallback: Create a sample carpet pattern
+      baseCanvas.width = 700;
+      baseCanvas.height = 900;
+      overlay.width = 700;
+      overlay.height = 900;
+      
+      baseCtx.fillStyle = carpetType === 'top' ? '#c9a582' : carpetType === 'middle' ? '#8b6f47' : '#4a2f1a';
+      baseCtx.fillRect(0, 0, baseCanvas.width, baseCanvas.height);
+      
+      baseCtx.strokeStyle = 'rgba(255,255,255,0.1)';
+      baseCtx.lineWidth = 2;
+      for (let i = 0; i < baseCanvas.width; i += 30) {
+        for (let j = 0; j < baseCanvas.height; j += 30) {
+          baseCtx.strokeRect(i, j, 30, 30);
+        }
+      }
+      baseCtx.fillStyle = 'white';
+      baseCtx.font = '20px Georgia';
+      baseCtx.textAlign = 'center';
+      baseCtx.fillText(`Draw on me! (${carpetType}.png not found)`, baseCanvas.width/2, 50);
 
-    originalCarpetImage.onerror = () => {
-        console.error(`Failed to load ${carpetType}.png`);
-        
-        // Fallback: Create a solid color canvas if image fails
-        baseCanvas.width = 700;
-        baseCanvas.height = 900;
-        hiddenCanvas.width = baseCanvas.width;
-        hiddenCanvas.height = baseCanvas.height;
-
-        const fallbackColor = carpetType === 'top' ? '#c9a582' : carpetType === 'middle' ? '#8b6f47' : '#4a2f1a';
-        
-        // Draw to base canvas directly for display
-        baseCtx.fillStyle = fallbackColor;
-        baseCtx.fillRect(0, 0, baseCanvas.width, baseCanvas.height);
-        
-        baseCtx.fillStyle = 'white';
-        baseCtx.font = '20px Georgia';
-        baseCtx.textAlign = 'center';
-        baseCtx.fillText(`Draw on me! (${carpetType}.png not found)`, baseCanvas.width/2, 50);
-
-        // Also draw to hidden canvas to 'store' this fallback
-        hiddenCtx.fillStyle = fallbackColor;
-        hiddenCtx.fillRect(0, 0, hiddenCanvas.width, hiddenCanvas.height);
-        
-        onboardingPage.classList.remove('active');
-        carpetPage.classList.add('active');
+      overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
+      
+      onboardingPage.classList.remove('active');
+      carpetPage.classList.add('active');
     };
-}
+  }
 
-function init() {
+  function init() {
     const maxWidth = 700;
     const maxHeight = 900;
-
-    let scale = Math.min(maxWidth / originalCarpetImage.width, maxHeight / originalCarpetImage.height);
-
-    baseCanvas.width = originalCarpetImage.width * scale;
-    baseCanvas.height = originalCarpetImage.height * scale;
-
-    hiddenCanvas.width = baseCanvas.width;
-    hiddenCanvas.height = baseCanvas.height;
-
-    // Draw original image to HIDDEN canvas to store pristine data
-    hiddenCtx.drawImage(originalCarpetImage, 0, 0, hiddenCanvas.width, hiddenCanvas.height);
     
-    // Draw original image to BASE canvas for initial display (full color)
-    baseCtx.drawImage(originalCarpetImage, 0, 0, baseCanvas.width, baseCanvas.height);
-}
+    let scale = Math.min(maxWidth / topImage.width, maxHeight / topImage.height);
+    
+    baseCanvas.width = topImage.width * scale;
+    baseCanvas.height = topImage.height * scale;
+    overlay.width = baseCanvas.width;
+    overlay.height = baseCanvas.height;
+    
+    // Draw original image to base canvas
+    baseCtx.drawImage(topImage, 0, 0, baseCanvas.width, baseCanvas.height);
+    
+    // Clear the overlay to start fresh
+    overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
+    
+    // CRITICAL: Draw the base image to the overlay once, with a color filter applied.
+    // This pre-fades the *entire image*, so the drawing will erase it to restore the color.
+    // To match your expectation (start full color, then fade), we skip this pre-fade.
+    // Instead, the Fade Mode brush will apply the 'fade' only where it's drawn.
+  }
 
-function getCanvasCoords(e) {
-    const rect = baseCanvas.getBoundingClientRect(); // Events on baseCanvas now
+  function getCanvasCoords(e) {
+    const rect = overlay.getBoundingClientRect(); // Events on overlay now
     if (e.touches) {
-        return {
-            x: e.touches[0].clientX - rect.left,
-            y: e.touches[0].clientY - rect.top
-        };
+      return {
+        x: e.touches[0].clientX - rect.left,
+        y: e.touches[0].clientY - rect.top
+      };
     }
     return {
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top
     };
-}
+  }
 
-// --- Drawing Logic (Pixel Manipulation) ---
+  function drawBrush(x, y) {
+    overlayCtx.save();
+    
+    // 1. Draw the textured shape onto the overlay canvas
+    const brushTexture = drawBrushTexture();
+    overlayCtx.drawImage(brushTexture, x - BRUSH_RADIUS, y - BRUSH_RADIUS);
+    
+    if (fadeMode) {
+      // FADE MODE: Draw a semi-transparent, bright color over the stroke area.
+      // This color must be drawn *on top of the current stroke*, so we need to
+      // use globalCompositeOperation to only affect pixels *within the stroke shape*.
 
-function drawBrush(x, y) {
-    const brushRadius = 25;
-    const brushDensity = 10; // Number of small circles to draw for texture
-    const fadeStrength = 0.2; // How much each stroke fades the color (0 to 1)
+      // The drawn texture is the 'source' (the new pixels).
+      // The image pixels underneath are the 'destination'.
+      // We want to apply a color to the *image pixels* defined by the stroke.
 
-    // Calculate the bounding box for pixel manipulation
-    const minX = Math.max(0, x - brushRadius);
-    const minY = Math.max(0, y - brushRadius);
-    const maxX = Math.min(baseCanvas.width, x + brushRadius);
-    const maxY = Math.min(baseCanvas.height, y + brushRadius);
-    const width = maxX - minX;
-    const height = maxY - minY;
+      // CRITICAL FIX: To apply a *color filter* to the image pixels
+      // defined by the stroke, we use globalCompositeOperation.
+      // 'source-atop' allows us to color the image underneath without affecting the image structure.
+      
+      // The overlay is the drawing surface. We need a separate canvas to do the color math.
+      baseCtx.save();
+      baseCtx.globalCompositeOperation = 'source-atop';
+      
+      // Draw a semi-transparent, bright yellow/white gradient over the texture
+      // This color will blend with the image pixels due to 'source-atop'
+      const fadeColor = 'rgba(255, 255, 200, 0.4)'; // Light yellow for subtle desaturation/lightening
+      baseCtx.fillStyle = fadeColor;
+      
+      // Use the texture as a clip mask (must be done on the same canvas)
+      baseCtx.globalAlpha = 1;
+      baseCtx.globalCompositeOperation = 'destination-in'; // Keep only where both this and destination exist
+      
+      baseCtx.drawImage(brushTexture, x - BRUSH_RADIUS, y - BRUSH_RADIUS);
 
-    if (width <= 0 || height <= 0) return; // Avoid invalid ImageData
+      baseCtx.globalCompositeOperation = 'source-atop'; // Only draw new color over existing image
+      baseCtx.fillStyle = fadeColor;
+      baseCtx.fillRect(x - BRUSH_RADIUS, y - BRUSH_RADIUS, BRUSH_RADIUS * 2, BRUSH_RADIUS * 2);
 
-    // Get original pixel data from the hidden canvas
-    const originalImageData = hiddenCtx.getImageData(minX, minY, width, height);
-    const originalPixels = originalImageData.data;
+      // This is still complex. The simplest way to apply a *filter* locally is to use
+      // the `baseCtx` with a global filter applied to the whole canvas, then mask.
+      
+      // **REVERTING to the simplest and most effective technique for your goal: BLEND MODE**
+      // Use the overlay to draw the light/desaturation color, and let the blend mode do the work.
+      
+      overlayCtx.globalCompositeOperation = 'source-over'; // Draw the texture onto the overlay
+      overlayCtx.globalAlpha = 0.5; // Controls the strength of the fade
+      overlayCtx.fillStyle = 'rgba(255, 255, 255, 1)'; // Use opaque white for the texture
 
-    // Get current pixel data from the base canvas (what's currently displayed)
-    const currentImageData = baseCtx.getImageData(minX, minY, width, height);
-    const currentPixels = currentImageData.data;
+      // Now, apply the color blend mode to the *entire overlay layer*
+      // This will cause the white texture drawn to blend with the base canvas
+      overlay.style.mixBlendMode = 'lighten'; // Mix blend mode lightens/desaturates colors
 
-    // Temporary context to draw brush texture for pixel application
-    const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = width;
-    tempCanvas.height = height;
-    const tempCtx = tempCanvas.getContext('2d');
+    } else {
+      // RESTORE MODE: Erase the overlay (removing the fade effect).
+      overlayCtx.globalCompositeOperation = 'destination-out';
+      overlayCtx.globalAlpha = 1; // Opaque erasing for full restoration
+      overlayCtx.fillStyle = 'rgba(0, 0, 0, 1)'; // Erasing color doesn't matter, only opacity
 
-    // Create the brush texture (based on your reference, like a dry chalk brush)
-    tempCtx.globalAlpha = 1; // Alpha will be handled by pixel manipulation
-    tempCtx.fillStyle = 'rgba(0,0,0,1)'; // Opaque, we'll use its shape for masking
-
-    for (let i = 0; i < brushDensity; i++) {
-        const offsetX = (Math.random() - 0.5) * brushRadius * 1.5;
-        const offsetY = (Math.random() - 0.5) * brushRadius * 1.5;
-        const smallRadius = brushRadius * (0.3 + Math.random() * 0.4);
-
-        tempCtx.beginPath();
-        tempCtx.arc(x - minX + offsetX, y - minY + offsetY, smallRadius, 0, Math.PI * 2);
-        tempCtx.fill();
+      // Draw the texture shape for erasing
+      overlayCtx.drawImage(brushTexture, x - BRUSH_RADIUS, y - BRUSH_RADIUS);
     }
-    // Get the pixel data for this brush texture
-    const brushTexture = tempCtx.getImageData(0, 0, width, height).data;
+    
+    overlayCtx.restore();
+  }
 
-    // Iterate through pixels within the brush area
-    for (let i = 0; i < currentPixels.length; i += 4) {
-        const r = currentPixels[i];
-        const g = currentPixels[i + 1];
-        const b = currentPixels[i + 2];
-        // const a = currentPixels[i + 3]; // Not modifying alpha
-
-        // Check the brush texture's alpha channel to see if this pixel is 'hit' by the brush
-        // The brushTexture data is opaque where drawn (alpha = 255), transparent elsewhere (alpha = 0)
-        if (brushTexture[i + 3] > 0) { // If this pixel is within the textured brush stroke
-            if (fadeMode) {
-                // Fade Mode: Lighten and desaturate current pixels
-                const faded = applyFade(r, g, b, fadeStrength);
-                currentPixels[i] = faded.r;
-                currentPixels[i + 1] = faded.g;
-                currentPixels[i + 2] = faded.b;
-            } else {
-                // Restore Mode: Copy original pixels from hidden canvas
-                currentPixels[i] = originalPixels[i];
-                currentPixels[i + 1] = originalPixels[i + 1];
-                currentPixels[i + 2] = originalPixels[i + 2];
-            }
-        }
-    }
-
-    // Put the modified pixel data back onto the base canvas
-    baseCtx.putImageData(currentImageData, minX, minY);
-}
-
-
-function startDrawing(e) {
+  function startDrawing(e) {
     e.preventDefault();
     isDrawing = true;
     const coords = getCanvasCoords(e);
+    // Draw first dot and start tracking stroke
     drawBrush(coords.x, coords.y);
-}
+  }
 
-function draw(e) {
+  function draw(e) {
     e.preventDefault();
     if (!isDrawing) return;
     const coords = getCanvasCoords(e);
+    // Draw continuously
     drawBrush(coords.x, coords.y);
-}
+  }
 
-function stopDrawing(e) {
+  function stopDrawing(e) {
     e.preventDefault();
     isDrawing = false;
-}
+  }
 
-// Attach all events to the #baseCanvas (the visible drawing surface)
-baseCanvas.addEventListener('mousedown', startDrawing);
-baseCanvas.addEventListener('mousemove', draw);
-baseCanvas.addEventListener('mouseup', stopDrawing);
-baseCanvas.addEventListener('mouseleave', stopDrawing);
+  // Mouse events are on the TOP layer (#overlay)
+  overlay.addEventListener('mousedown', startDrawing);
+  overlay.addEventListener('mousemove', draw);
+  overlay.addEventListener('mouseup', stopDrawing);
+  overlay.addEventListener('mouseleave', stopDrawing);
 
-// Touch events
-baseCanvas.addEventListener('touchstart', startDrawing);
-baseCanvas.addEventListener('touchmove', draw);
-baseCanvas.addEventListener('touchend', stopDrawing);
+  // Touch events
+  overlay.addEventListener('touchstart', startDrawing);
+  overlay.addEventListener('touchmove', draw);
+  overlay.addEventListener('touchend', stopDrawing);
 
-// --- Buttons ---
+  // --- Buttons ---
+  
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    // Reset clears the overlay canvas, removing all fade effects
+    overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
+  });
 
-document.getElementById('resetBtn').addEventListener('click', () => {
-    // Reset means redrawing the pristine original image from the hidden canvas
-    if (originalCarpetImage.complete && originalCarpetImage.naturalWidth !== 0) { // Ensure image is loaded
-        baseCtx.drawImage(originalCarpetImage, 0, 0, baseCanvas.width, baseCanvas.height);
-    } else {
-        // Fallback for when image fails to load, use hidden canvas fallback
-        baseCtx.drawImage(hiddenCanvas, 0, 0, baseCanvas.width, baseCanvas.height);
-    }
-    
-    if (fadeMode) {
-        instructionsSpan.textContent = "Draw to fade • Switch mode to restore";
-    } else {
-        instructionsSpan.textContent = "Draw to restore • Switch mode to fade";
-    }
-});
-
-document.getElementById('modeBtn').addEventListener('click', () => {
+  document.getElementById('modeBtn').addEventListener('click', () => {
     fadeMode = !fadeMode;
-    document.getElementById('modeBtn').textContent = fadeMode ? 'Restore Mode' : 'Fade Mode'; 
-
-    if (fadeMode) {
-        screen.classList.remove('dark-mode');
-        instructionsSpan.textContent = "Draw to fade • Switch mode to restore";
-    } else {
-        screen.classList.add('dark-mode');
-        instructionsSpan.textContent = "Draw to restore • Switch mode to fade";
-    }
-});
-
-document.getElementById('backBtn').addEventListener('click', () => {
+    document.getElementById('modeBtn').textContent = fadeMode ? 'Restore Mode' : 'Fade Mode';
+    instructionsSpan.textContent = fadeMode ? "Draw to fade • Switch mode to restore" : "Draw to restore • Switch mode to fade";
+  });
+  
+  document.getElementById('backBtn').addEventListener('click', () => {
     carpetPage.classList.remove('active');
     onboardingPage.classList.add('active');
-    // On back, clear base canvas and reset relevant states
-    baseCtx.clearRect(0, 0, baseCanvas.width, baseCanvas.height);
-    screen.classList.remove('dark-mode');
-});
+    overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
+  });
 </script>
 </body>
 </html>

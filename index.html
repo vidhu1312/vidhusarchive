@@ -66,7 +66,7 @@ height: 100%;
 padding: 40px;
 }
 
-.page.active { 
+.page.active { 
 display: flex;
 flex-direction: column;
 align-items: center;
@@ -253,16 +253,16 @@ opacity: 0; /* Make it invisible */
 
 <div id="carpetPage" class="page">
 <div class="mode-toggle-container">
-<button id="modeBtn" class="btn">Restore Mode</button>
+<button id="modeBtn" class="btn">Erase Mode</button>
 </div>
 <div class="controls">
 <button id="backBtn" class="btn btn-secondary">← Back</button>
-<span class="instructions">Draw to fade • Switch mode to restore</span>
+<span class="instructions">Draw to fade • Switch mode to erase</span>
 <button id="resetBtn" class="btn btn-secondary">Reset</button>
 </div>
 <div id="container">
 <canvas id="baseCanvas"></canvas>
-<canvas id="overlay"></canvas> 
+<canvas id="overlay"></canvas> 
 </div>
 </div>
 </div>
@@ -300,77 +300,77 @@ const FADE_STRENGTH_GLOBAL = 0.5; // Fixed strength for the one-time fade effect
 // --- Helper Functions ---
 
 /**
- * Applies a fixed fade (desaturation/lighten) to a single pixel.
- * Used only once during initialization to create the 'fadedCanvas' state.
- */
-function applyFixedFade(r, g, b) { 
-    // Calculate Luminosity (grayscale value)
-    const gray = (r * 0.299 + g * 0.587 + b * 0.114);
-    
-    // Desaturation: Blend current color toward gray (using global strength)
-    const desatR = r + (gray - r) * FADE_STRENGTH_GLOBAL; 
-    const desatG = g + (gray - g) * FADE_STRENGTH_GLOBAL;
-    const desatB = b + (gray - b) * FADE_STRENGTH_GLOBAL;
+ * Applies a fixed fade (desaturation/lighten) to a single pixel.
+ * Used only once during initialization to create the 'fadedCanvas' state.
+ */
+function applyFixedFade(r, g, b) { 
+    // Calculate Luminosity (grayscale value)
+    const gray = (r * 0.299 + g * 0.587 + b * 0.114);
+    
+    // Desaturation: Blend current color toward gray (using global strength)
+    const desatR = r + (gray - r) * FADE_STRENGTH_GLOBAL; 
+    const desatG = g + (gray - g) * FADE_STRENGTH_GLOBAL;
+    const desatB = b + (gray - b) * FADE_STRENGTH_GLOBAL;
 
-    // Lightening: Blend desaturated color toward a light-gray (220)
-    const targetLight = 220;
-    const lightenAmount = FADE_STRENGTH_GLOBAL * 0.5;
+    // Lightening: Blend desaturated color toward a light-gray (220)
+    const targetLight = 220;
+    const lightenAmount = FADE_STRENGTH_GLOBAL * 0.5;
 
-    return {
-        r: Math.min(255, desatR + (targetLight - desatR) * lightenAmount),
-        g: Math.min(255, desatG + (targetLight - desatG) * lightenAmount),
-        b: Math.min(255, desatB + (targetLight - desatB) * lightenAmount)
-    };
+    return {
+        r: Math.min(255, desatR + (targetLight - desatR) * lightenAmount),
+        g: Math.min(255, desatG + (targetLight - desatG) * lightenAmount),
+        b: Math.min(255, desatB + (targetLight - desatB) * lightenAmount)
+    };
 }
 
 /**
- * Renders the grainy texture onto the maskCanvas context.
- * This texture acts as the stencil for pixel operations.
- */
+ * Renders the grainy texture onto the maskCanvas context.
+ * This texture acts as the stencil for pixel operations.
+ */
 function drawGrainMask(radius) {
-    maskCanvas.width = radius * 2;
-    maskCanvas.height = radius * 2;
-    maskCtx.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
-    
-    const center = radius;
-    const grainCount = 40;
-    
-    maskCtx.fillStyle = `rgba(0, 0, 0, 1)`;
-    maskCtx.globalCompositeOperation = 'source-over';
-    
-    // Draw particles for texture
-    for (let i = 0; i < grainCount; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        const distance = Math.random() * radius * 0.9;
-        const px = center + Math.cos(angle) * distance;
-        const py = center + Math.sin(angle) * distance;
-        
-        maskCtx.beginPath();
-        maskCtx.arc(px, py, 2 + Math.random() * 1.5, 0, Math.PI * 2);
-        maskCtx.fill();
-    }
+    maskCanvas.width = radius * 2;
+    maskCanvas.height = radius * 2;
+    maskCtx.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
+    
+    const center = radius;
+    const grainCount = 40;
+    
+    maskCtx.fillStyle = `rgba(0, 0, 0, 1)`;
+    maskCtx.globalCompositeOperation = 'source-over';
+    
+    // Draw particles for texture
+    for (let i = 0; i < grainCount; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const distance = Math.random() * radius * 0.9;
+        const px = center + Math.cos(angle) * distance;
+        const py = center + Math.sin(angle) * distance;
+        
+        maskCtx.beginPath();
+        maskCtx.arc(px, py, 2 + Math.random() * 1.5, 0, Math.PI * 2);
+        maskCtx.fill();
+    }
 }
 
 /**
- * Runs the fixed fade effect on an entire canvas once.
- */
+ * Runs the fixed fade effect on an entire canvas once.
+ */
 function preCalculateFadedState(sourceCtx, targetCtx, width, height) {
-    const imageData = sourceCtx.getImageData(0, 0, width, height);
-    const pixels = imageData.data;
+    const imageData = sourceCtx.getImageData(0, 0, width, height);
+    const pixels = imageData.data;
 
-    for (let i = 0; i < pixels.length; i += 4) {
-        const r = pixels[i];
-        const g = pixels[i + 1];
-        const b = pixels[i + 2];
-        
-        const faded = applyFixedFade(r, g, b);
-        
-        pixels[i] = faded.r;
-        pixels[i + 1] = faded.g;
-        pixels[i + 2] = faded.b;
-    }
+    for (let i = 0; i < pixels.length; i += 4) {
+        const r = pixels[i];
+        const g = pixels[i + 1];
+        const b = pixels[i + 2];
+        
+        const faded = applyFixedFade(r, g, b);
+        
+        pixels[i] = faded.r;
+        pixels[i + 1] = faded.g;
+        pixels[i + 2] = faded.b;
+    }
 
-    targetCtx.putImageData(imageData, 0, 0);
+    targetCtx.putImageData(imageData, 0, 0);
 }
 
 // --- Image Loading and Initialization (Modified to include faded state) ---
@@ -383,130 +383,130 @@ document.querySelectorAll('.carpet-option').forEach(option => {
 });
 
 function loadCarpet(carpetType) {
-    fadeMode = true; 
-    screen.classList.remove('dark-mode');
-    document.getElementById('modeBtn').textContent = 'Restore Mode';
-    instructionsSpan.textContent = "Draw to fade • Switch mode to restore";
+    fadeMode = true; 
+    screen.classList.remove('dark-mode');
+    document.getElementById('modeBtn').textContent = 'Erase Mode'; // Changed to Erase
+    instructionsSpan.textContent = "Draw to fade • Switch mode to erase"; // Changed to erase
 
-    currentCarpet = carpetType;
-    originalCarpetImage = new Image();
-    originalCarpetImage.crossOrigin = "anonymous";
-    originalCarpetImage.src = `${carpetType}.png`;
+    currentCarpet = carpetType;
+    originalCarpetImage = new Image();
+    originalCarpetImage.crossOrigin = "anonymous";
+    originalCarpetImage.src = `${carpetType}.png`;
 
-    originalCarpetImage.onload = () => {
-        init();
-        onboardingPage.classList.remove('active');
-        carpetPage.classList.add('active');
-    };
+    originalCarpetImage.onload = () => {
+        init();
+        onboardingPage.classList.remove('active');
+        carpetPage.classList.add('active');
+    };
 
-    originalCarpetImage.onerror = () => {
-        console.error(`Failed to load ${carpetType}.png`);
-        
-        baseCanvas.width = 700;
-        baseCanvas.height = 900;
-        hiddenCanvas.width = fadedCanvas.width = baseCanvas.width;
-        hiddenCanvas.height = fadedCanvas.height = baseCanvas.height;
+    originalCarpetImage.onerror = () => {
+        console.error(`Failed to load ${carpetType}.png`);
+        
+        baseCanvas.width = 700;
+        baseCanvas.height = 900;
+        hiddenCanvas.width = fadedCanvas.width = baseCanvas.width;
+        hiddenCanvas.height = fadedCanvas.height = baseCanvas.height;
 
-        const fallbackColor = carpetType === 'top' ? '#c9a582' : carpetType === 'middle' ? '#8b6f47' : '#4a2f1a';
-        
-        // Draw fallback to hidden (pristine)
-        hiddenCtx.fillStyle = fallbackColor;
-        hiddenCtx.fillRect(0, 0, hiddenCanvas.width, hiddenCanvas.height);
-        
-        // Calculate and draw fallback to faded
-        preCalculateFadedState(hiddenCtx, fadedCtx, hiddenCanvas.width, hiddenCanvas.height);
+        const fallbackColor = carpetType === 'top' ? '#c9a582' : carpetType === 'middle' ? '#8b6f47' : '#4a2f1a';
+        
+        // Draw fallback to hidden (pristine)
+        hiddenCtx.fillStyle = fallbackColor;
+        hiddenCtx.fillRect(0, 0, hiddenCanvas.width, hiddenCanvas.height);
+        
+        // Calculate and draw fallback to faded
+        preCalculateFadedState(hiddenCtx, fadedCtx, hiddenCanvas.width, hiddenCanvas.height);
 
-        // Draw pristine state to display
-        baseCtx.drawImage(hiddenCanvas, 0, 0); 
-        
-        onboardingPage.classList.remove('active');
-        carpetPage.classList.add('active');
-    };
+        // Draw pristine state to display
+        baseCtx.drawImage(hiddenCanvas, 0, 0); 
+        
+        onboardingPage.classList.remove('active');
+        carpetPage.classList.add('active');
+    };
 }
 
 function init() {
-    const maxWidth = 700;
-    const maxHeight = 900;
+    const maxWidth = 700;
+    const maxHeight = 900;
 
-    let scale = Math.min(maxWidth / originalCarpetImage.width, maxHeight / originalCarpetImage.height);
+    let scale = Math.min(maxWidth / originalCarpetImage.width, maxHeight / originalCarpetImage.height);
 
-    baseCanvas.width = originalCarpetImage.width * scale;
-    baseCanvas.height = originalCarpetImage.height * scale;
-    const w = baseCanvas.width;
-    const h = baseCanvas.height;
+    baseCanvas.width = originalCarpetImage.width * scale;
+    baseCanvas.height = originalCarpetImage.height * scale;
+    const w = baseCanvas.width;
+    const h = baseCanvas.height;
 
-    hiddenCanvas.width = fadedCanvas.width = w;
-    hiddenCanvas.height = fadedCanvas.height = h;
+    hiddenCanvas.width = fadedCanvas.width = w;
+    hiddenCanvas.height = fadedCanvas.height = h;
 
-    // 1. Draw original image to HIDDEN canvas (PRISTINE state)
-    hiddenCtx.drawImage(originalCarpetImage, 0, 0, w, h);
-    
-    // 2. Calculate and draw the FADED state to fadedCanvas
-    fadedCtx.drawImage(originalCarpetImage, 0, 0, w, h); // Start with pristine image
-    preCalculateFadedState(fadedCtx, fadedCtx, w, h); // Apply the fixed pixel fade
+    // 1. Draw original image to HIDDEN canvas (PRISTINE state)
+    hiddenCtx.drawImage(originalCarpetImage, 0, 0, w, h);
+    
+    // 2. Calculate and draw the FADED state to fadedCanvas
+    fadedCtx.drawImage(originalCarpetImage, 0, 0, w, h); // Start with pristine image
+    preCalculateFadedState(fadedCtx, fadedCtx, w, h); // Apply the fixed pixel fade
 
-    // 3. Draw PRISTINE state to BASE canvas for initial display
-    baseCtx.drawImage(originalCarpetImage, 0, 0, w, h);
+    // 3. Draw PRISTINE state to BASE canvas for initial display
+    baseCtx.drawImage(originalCarpetImage, 0, 0, w, h);
 }
 
 function getCanvasCoords(e) {
-    const rect = baseCanvas.getBoundingClientRect();
-    if (e.touches) {
-        return {
-            x: e.touches[0].clientX - rect.left,
-            y: e.touches[0].clientY - rect.top
-        };
-    }
-    return {
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top
-    };
+    const rect = baseCanvas.getBoundingClientRect();
+    if (e.touches) {
+        return {
+            x: e.touches[0].clientX - rect.left,
+            y: e.touches[0].clientY - rect.top
+        };
+    }
+    return {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+    };
 }
 
 // --- REVISED DRAW BRUSH (Now simply copies fixed states) ---
 
 function drawBrush(x, y) {
-    const brushRadius = BRUSH_RADIUS;
+    const brushRadius = BRUSH_RADIUS;
 
-    // Calculate the bounding box for pixel manipulation
-    const minX = Math.max(0, x - brushRadius);
-    const minY = Math.max(0, y - brushRadius);
-    const maxX = Math.min(baseCanvas.width, x + brushRadius);
-    const maxY = Math.min(baseCanvas.height, y + brushRadius);
-    const width = maxX - minX;
-    const height = maxY - minY;
+    // Calculate the bounding box for pixel manipulation
+    const minX = Math.max(0, x - brushRadius);
+    const minY = Math.max(0, y - brushRadius);
+    const maxX = Math.min(baseCanvas.width, x + brushRadius);
+    const maxY = Math.min(baseCanvas.height, y + brushRadius);
+    const width = maxX - minX;
+    const height = maxY - minY;
 
-    if (width <= 0 || height <= 0) return;
+    if (width <= 0 || height <= 0) return;
 
-    // 1. Determine source data context (Original or Faded)
-    const sourceCtx = fadeMode ? fadedCtx : hiddenCtx;
-    
-    // 2. Get the target image data (the current display state)
-    const currentImageData = baseCtx.getImageData(minX, minY, width, height);
-    const currentPixels = currentImageData.data;
+    // 1. Determine source data context (Original or Faded)
+    const sourceCtx = fadeMode ? fadedCtx : hiddenCtx;
+    
+    // 2. Get the target image data (the current display state)
+    const currentImageData = baseCtx.getImageData(minX, minY, width, height);
+    const currentPixels = currentImageData.data;
 
-    // 3. Get the source (fixed state) image data
-    const sourceImageData = sourceCtx.getImageData(minX, minY, width, height);
-    const sourcePixels = sourceImageData.data;
+    // 3. Get the source (fixed state) image data
+    const sourceImageData = sourceCtx.getImageData(minX, minY, width, height);
+    const sourcePixels = sourceImageData.data;
 
-    // 4. Draw the desired grain texture onto the temporary mask canvas
-    drawGrainMask(brushRadius);
-    const brushTexture = maskCtx.getImageData(0, 0, width, height).data;
+    // 4. Draw the desired grain texture onto the temporary mask canvas
+    drawGrainMask(brushRadius);
+    const brushTexture = maskCtx.getImageData(0, 0, width, height).data;
 
-    // 5. Copy pixels based on the brush texture
-    for (let i = 0; i < currentPixels.length; i += 4) {
-        // Only modify the pixel if the brush texture hits it
-        if (brushTexture[i + 3] > 10) { 
-            // Copy RGB values from the fixed source state (Faded or Original)
-            currentPixels[i] = sourcePixels[i];
-            currentPixels[i + 1] = sourcePixels[i + 1];
-            currentPixels[i + 2] = sourcePixels[i + 2];
-            // Alpha (i+3) remains the same
-        }
-    }
+    // 5. Copy pixels based on the brush texture
+    for (let i = 0; i < currentPixels.length; i += 4) {
+        // Only modify the pixel if the brush texture hits it
+        if (brushTexture[i + 3] > 10) { 
+            // Copy RGB values from the fixed source state (Faded or Original)
+            currentPixels[i] = sourcePixels[i];
+            currentPixels[i + 1] = sourcePixels[i + 1];
+            currentPixels[i + 2] = sourcePixels[i + 2];
+            // Alpha (i+3) remains the same
+        }
+    }
 
-    // 6. Put the modified pixel data back onto the base canvas
-    baseCtx.putImageData(currentImageData, minX, minY);
+    // 6. Put the modified pixel data back onto the base canvas
+    baseCtx.putImageData(currentImageData, minX, minY);
 }
 
 
@@ -544,25 +544,25 @@ baseCanvas.addEventListener('touchend', stopDrawing);
 
 document.getElementById('resetBtn').addEventListener('click', () => {
     // Reset draws the entire PRISTINE state from hiddenCanvas
-    baseCtx.drawImage(hiddenCanvas, 0, 0, baseCanvas.width, baseCanvas.height);
+    baseCtx.drawImage(hiddenCanvas, 0, 0, baseCanvas.width, baseCanvas.height);
     
     if (fadeMode) {
-        instructionsSpan.textContent = "Draw to fade • Switch mode to restore";
+        instructionsSpan.textContent = "Draw to fade • Switch mode to erase"; // Changed to erase
     } else {
-        instructionsSpan.textContent = "Draw to restore • Switch mode to fade";
+        instructionsSpan.textContent = "Draw to erase • Switch mode to fade"; // Changed to erase
     }
 });
 
 document.getElementById('modeBtn').addEventListener('click', () => {
     fadeMode = !fadeMode;
-    document.getElementById('modeBtn').textContent = fadeMode ? 'Restore Mode' : 'Fade Mode'; 
+    document.getElementById('modeBtn').textContent = fadeMode ? 'Erase Mode' : 'Fade Mode'; // Changed to Erase 
 
     if (fadeMode) {
         screen.classList.remove('dark-mode');
-        instructionsSpan.textContent = "Draw to fade • Switch mode to restore";
+        instructionsSpan.textContent = "Draw to fade • Switch mode to erase"; // Changed to erase
     } else {
         screen.classList.add('dark-mode');
-        instructionsSpan.textContent = "Draw to restore • Switch mode to fade";
+        instructionsSpan.textContent = "Draw to erase • Switch mode to fade"; // Changed to erase
     }
 });
 

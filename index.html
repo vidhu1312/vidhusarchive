@@ -66,7 +66,8 @@ height: 100%;
 padding: 40px;
 }
 
-.page.active {
+/* Ensure the initial page is shown by default */
+.page.active { 
 display: flex;
 flex-direction: column;
 align-items: center;
@@ -204,7 +205,6 @@ background: #444;
 .instructions {
 font-size: 14px;
 color: #000;
-/* Hide one instruction span and show the other, or update the content */
 }
 
 #screen.dark-mode .instructions {
@@ -227,7 +227,7 @@ cursor: crosshair;
 position: absolute;
 top: 0;
 left: 0;
-pointer-events: none; /* Make overlay non-interactive */
+/* REMOVED pointer-events: none; so we can draw on it */
 }
 </style>
 </head>
@@ -256,7 +256,7 @@ pointer-events: none; /* Make overlay non-interactive */
 </div>
 <div class="controls">
 <button id="backBtn" class="btn btn-secondary">← Back</button>
-<span class="instructions">Draw to fade • Switch mode to restore</span> 
+<span class="instructions">Draw to fade • Switch mode to restore</span>
 <button id="resetBtn" class="btn btn-secondary">Reset</button>
 </div>
 <div id="container">
@@ -276,25 +276,23 @@ const overlayCtx = overlay.getContext('2d');
 const onboardingPage = document.getElementById('onboarding');
 const carpetPage = document.getElementById('carpetPage');
 const screen = document.getElementById('screen');
+const instructionsSpan = document.querySelector('.instructions');
 
 let currentCarpet = null;
 let topImage = new Image();
 let isDrawing = false;
-let fadeMode = true; // true means the brush will FADE (erase the overlay)
+let fadeMode = true;
 
 // --- Helper Functions ---
 
-// Fills the overlay canvas with a semi-transparent white/fade color
 function fillOverlayWithFade() {
-    overlayCtx.globalCompositeOperation = "source-over"; // Ensure drawing is additive
-    // Using a light, semi-transparent color for the "fade" effect
+    overlayCtx.globalCompositeOperation = "source-over";
     overlayCtx.fillStyle = "rgba(255, 255, 255, 0.5)"; 
     overlayCtx.fillRect(0, 0, overlay.width, overlay.height);
 }
 
 // --- Carpet Selection and Initialization ---
 
-// Carpet selection
 document.querySelectorAll('.carpet-option').forEach(option => {
     option.addEventListener('click', () => {
         const carpetType = option.dataset.carpet;
@@ -303,12 +301,10 @@ document.querySelectorAll('.carpet-option').forEach(option => {
 });
 
 function loadCarpet(carpetType) {
-    // Always start with fade mode when a new carpet is opened
     fadeMode = true;
     screen.classList.remove('dark-mode');
-    document.getElementById('modeBtn').textContent = 'Restore Mode'; // Label shows NEXT mode
-    document.querySelector('.instructions').textContent = "Draw to fade • Switch mode to restore";
-
+    document.getElementById('modeBtn').textContent = 'Restore Mode';
+    instructionsSpan.textContent = "Draw to fade • Switch mode to restore";
 
     currentCarpet = carpetType;
     topImage = new Image();
@@ -339,7 +335,7 @@ function loadCarpet(carpetType) {
         baseCtx.textAlign = 'center';
         baseCtx.fillText(`Draw on me! (${carpetType}.png not found)`, baseCanvas.width/2, 50);
 
-        fillOverlayWithFade(); // Apply initial fade layer to fallback
+        fillOverlayWithFade();
 
         onboardingPage.classList.remove('active');
         carpetPage.classList.add('active');
@@ -357,17 +353,16 @@ function init() {
     overlay.width = baseCanvas.width;
     overlay.height = baseCanvas.height;
 
-    // Draw the original carpet image on the base canvas
     baseCtx.drawImage(topImage, 0, 0, baseCanvas.width, baseCanvas.height);
     
-    // Fill the overlay with the initial semi-transparent fade layer
     fillOverlayWithFade();
-    // The overlay is made interactive again after init
-    overlay.style.pointerEvents = 'none'; 
+    
+    // Ensure pointer events are active on the overlay
+    overlay.style.pointerEvents = 'auto'; 
 }
 
 function getCanvasCoords(e) {
-    const rect = baseCanvas.getBoundingClientRect();
+    const rect = overlay.getBoundingClientRect();
     if (e.touches) {
         return {
             x: e.touches[0].clientX - rect.left,
@@ -384,21 +379,18 @@ function getCanvasCoords(e) {
 
 function drawBrush(x, y) {
     const radius = 25;
-    const edgeRoughness = 20; // Number of small irregular edge scatter points
-    let brushColor = 'rgba(0, 0, 0, 1)'; // Use opaque color for erasing (destination-out)
+    const edgeRoughness = 20;
+    let brushColor = 'rgba(0, 0, 0, 1)';
 
     overlayCtx.save();
     
     if (fadeMode) {
-        // Fade Mode: Erase the semi-transparent overlay to reveal the base image.
         overlayCtx.globalCompositeOperation = "destination-out";
-        document.querySelector('.instructions').textContent = "Draw to fade • Switch mode to restore"; 
+        instructionsSpan.textContent = "Draw to fade • Switch mode to restore"; 
     } else {
-        // Restore Mode: Draw the semi-transparent color back onto the overlay.
         overlayCtx.globalCompositeOperation = "source-over";
-        // When restoring, we draw the original fade color
         brushColor = 'rgba(255, 255, 255, 0.5)'; 
-        document.querySelector('.instructions').textContent = "Draw to restore • Switch mode to fade"; 
+        instructionsSpan.textContent = "Draw to restore • Switch mode to fade"; 
     }
 
     // 1. Draw a main circular shape
@@ -407,15 +399,13 @@ function drawBrush(x, y) {
     overlayCtx.arc(x, y, radius * 0.9, 0, Math.PI * 2); 
     overlayCtx.fill();
 
-    // 2. Add rough edges (small, random dots/squares around the main circle)
+    // 2. Add rough edges
     for (let i = 0; i < edgeRoughness; i++) {
         const angle = Math.random() * Math.PI * 2;
-        // Scatter points from about 70% of the radius to outside the radius
         const dist = radius * (0.7 + Math.random() * 0.6); 
         const nx = x + Math.cos(angle) * dist;
         const ny = y + Math.sin(angle) * dist;
         
-        // Draw small, rough squares/dots
         const size = 1 + Math.random() * 2;
         overlayCtx.fillRect(nx, ny, size, size);
     }
@@ -442,50 +432,45 @@ function stopDrawing(e) {
     isDrawing = false;
 }
 
-// Mouse events (attached to baseCanvas, which is underneath the overlay)
-baseCanvas.addEventListener('mousedown', startDrawing);
-baseCanvas.addEventListener('mousemove', draw);
-baseCanvas.addEventListener('mouseup', stopDrawing);
-baseCanvas.addEventListener('mouseleave', stopDrawing);
+// Attach all events to the #overlay canvas
+overlay.addEventListener('mousedown', startDrawing);
+overlay.addEventListener('mousemove', draw);
+overlay.addEventListener('mouseup', stopDrawing);
+overlay.addEventListener('mouseleave', stopDrawing);
 
 // Touch events
-baseCanvas.addEventListener('touchstart', startDrawing);
-baseCanvas.addEventListener('touchmove', draw);
-baseCanvas.addEventListener('touchend', stopDrawing);
+overlay.addEventListener('touchstart', startDrawing);
+overlay.addEventListener('touchmove', draw);
+overlay.addEventListener('touchend', stopDrawing);
 
 // --- Buttons ---
 
 document.getElementById('resetBtn').addEventListener('click', () => {
-    // Reset means re-applying the initial fade layer
     fillOverlayWithFade();
-    // Re-set the correct instruction text
     if (fadeMode) {
-        document.querySelector('.instructions').textContent = "Draw to fade • Switch mode to restore";
+        instructionsSpan.textContent = "Draw to fade • Switch mode to restore";
     } else {
-        document.querySelector('.instructions').textContent = "Draw to restore • Switch mode to fade";
+        instructionsSpan.textContent = "Draw to restore • Switch mode to fade";
     }
 });
 
 document.getElementById('modeBtn').addEventListener('click', () => {
     fadeMode = !fadeMode;
-    // Label shows the mode the button will switch TO (the *opposite* of current mode)
     document.getElementById('modeBtn').textContent = fadeMode ? 'Restore Mode' : 'Fade Mode'; 
 
-    // Toggle dark mode (cosmetic change for "restore" mode)
     if (fadeMode) {
         screen.classList.remove('dark-mode');
-        // Instructions are updated within drawBrush but set here too for instant feedback
-        document.querySelector('.instructions').textContent = "Draw to fade • Switch mode to restore";
+        instructionsSpan.textContent = "Draw to fade • Switch mode to restore";
     } else {
         screen.classList.add('dark-mode');
-        document.querySelector('.instructions').textContent = "Draw to restore • Switch mode to fade";
+        instructionsSpan.textContent = "Draw to restore • Switch mode to fade";
     }
 });
 
 document.getElementById('backBtn').addEventListener('click', () => {
     carpetPage.classList.remove('active');
     onboardingPage.classList.add('active');
-    overlayCtx.clearRect(0, 0, overlay.width, overlay.height); // Clear overlay on back
+    overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
     screen.classList.remove('dark-mode');
 });
 </script>
